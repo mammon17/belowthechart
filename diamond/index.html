@@ -57,6 +57,8 @@ a.pill:hover { border-color: var(--ice) }
 .stat { background: var(--paper); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px }
 .stat b { font: 700 1.6rem var(--f-display); font-variant-numeric: tabular-nums }
 .stat span { color: var(--soft); font-size: .85rem }
+.update { border: 1px solid var(--ice); background: var(--ice-bg); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px }
+.update .eyebrow { color: var(--ice) }
 .verdict { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px }
 .v { border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px }
 .v.plus { background: var(--up-bg) } .v.minus { background: var(--down-bg) } .v.odds { background: var(--ice-bg) }
@@ -152,6 +154,10 @@ footer { border-top: 1px solid var(--line); padding-top: 20px; color: var(--soft
       <div class="stat"><b>$57K</b><span>liquidity, paired with $PUMP</span></div>
       <div class="stat"><b>3,190</b><span>holders after 5 hours</span></div>
       <div class="stat"><b>4</b><span>waves since launch</span></div>
+    </div>
+    <div class="update" id="update"><span class="eyebrow">Update · Nov 6, 06:42 UTC</span>
+      <p><b>$284K</b> market cap (GMGN), liquidity $51.5K, 3,365 holders. Still inside the $140–480K chop, no breakout, no breakdown.</p>
+      <p>Whole life now: $1.46M bought, $1.41M sold, net +$53K. Last hour: $77K bought, $79K sold. The top 2 holder, the fresh bottom buyer, the $Coal dev and schoen all still hold their size.</p>
     </div>
     <div class="verdict">
       <div class="v plus"><span class="eyebrow">For</span><p>The theme feeds itself: the Diamond algorithm rewards callers for picking bigger coins and holding them, and $Diamond is the obvious pick. A pump.fun employee confirmed the feature. Child coins already trade against it.</p></div>
@@ -357,7 +363,7 @@ footer { border-top: 1px solid var(--line); padding-top: 20px; color: var(--soft
 
   <footer>
     <p>By <a href="https://x.com/iwant1millionn" target="_blank" rel="noopener">@iwant1millionn</a> · updates in <a href="https://t.me/BelowtheChart" target="_blank" rel="noopener">t.me/BelowtheChart</a></p>
-    <p>Sources: GMGN, GeckoTerminal, DexScreener, Helius, X. Times in UTC. Data as of Nov 6, 2026, 05:45 UTC; prices move fast. I hold no position. Not financial advice.</p>
+    <p>Sources: GMGN, GeckoTerminal, DexScreener, Helius, X. Times in UTC. Data as of Nov 6, 2026, 05:45 UTC, update at 06:42 UTC; prices move fast. I hold no position. Not financial advice.</p>
   </footer>
 </main>
 
