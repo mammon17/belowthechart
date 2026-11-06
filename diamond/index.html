@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>$Diamond Deep Dive</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="On-chain deep dive into $Diamond, the pump.fun meme on the new Diamond callout-rewards algorithm. Every wallet and account linked.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a case file. One reading column, wide figures break out of it; facts in mono, story in sans. */
+:root {
+  --bg: #f3f5f9; --paper: #ffffff; --ink: #121826; --soft: #5b6578; --line: #dde2ec;
+  --ice: #0f7fb3; --ice-bg: #e2f2fa; --up: #128a5c; --up-bg: #e1f4ec; --down: #c4352b; --down-bg: #fbe7e5; --warn: #9a6400; --warn-bg: #fff2d4;
+  --chart-grid: #e6eaf2; --chart-line: #121826;
+  --f-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0c1018; --paper: #131926; --ink: #e9edf5; --soft: #929cb0; --line: #252e40;
+  --ice: #5cc6f2; --ice-bg: #10283a; --up: #46c98f; --up-bg: #0f2e22; --down: #ff7e70; --down-bg: #3a1714; --warn: #f2c25b; --warn-bg: #34280c;
+  --chart-grid: #1f2738; --chart-line: #e9edf5; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0c1018; --paper: #131926; --ink: #e9edf5; --soft: #929cb0; --line: #252e40;
+  --ice: #5cc6f2; --ice-bg: #10283a; --up: #46c98f; --up-bg: #0f2e22; --down: #ff7e70; --down-bg: #3a1714; --warn: #f2c25b; --warn-bg: #34280c;
+  --chart-grid: #1f2738; --chart-line: #e9edf5; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 16px/1.6 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px }
+main { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px }
+a { color: var(--ice); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--ice) 35%, transparent) }
+a:hover { border-bottom-color: var(--ice) }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--ice); outline-offset: 2px; border-radius: 3px }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em }
+h2 { font-size: 1.65rem; font-weight: 700 }
+h3 { font-size: 1.1rem; font-weight: 700 }
+p { margin: 0 }
+.mono, code { font-family: var(--f-mono); font-size: .9em }
+.eyebrow { font: 500 .78rem var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--soft) }
+section { display: flex; flex-direction: column; gap: 16px; min-width: 0 }
+.prose { display: flex; flex-direction: column; gap: 12px; max-width: 68ch }
+ul.facts { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 8px }
+.num { font-variant-numeric: tabular-nums }
+
+/* hero */
+.hero { display: flex; flex-direction: column; gap: 18px }
+.hero h1 { font-size: clamp(2.6rem, 8vw, 4.4rem); font-weight: 800; line-height: 1 }
+.hero h1 .gem { color: var(--ice) }
+.lede { font-size: 1.2rem; max-width: 60ch }
+.links { display: flex; flex-wrap: wrap; gap: 8px }
+.pill { font: 500 .85rem var(--f-mono); border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 4px 12px; color: var(--ink) }
+a.pill:hover { border-color: var(--ice) }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden }
+.stat { background: var(--paper); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px }
+.stat b { font: 700 1.6rem var(--f-display); font-variant-numeric: tabular-nums }
+.stat span { color: var(--soft); font-size: .85rem }
+.verdict { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px }
+.v { border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px }
+.v.plus { background: var(--up-bg) } .v.minus { background: var(--down-bg) } .v.odds { background: var(--ice-bg) }
+.v .eyebrow { color: inherit; opacity: .8 }
+.v.plus .eyebrow { color: var(--up) } .v.minus .eyebrow { color: var(--down) } .v.odds .eyebrow { color: var(--ice) }
+
+/* chart */
+figure { margin: 0; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 16px 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0 }
+figcaption { color: var(--soft); font-size: .85rem }
+.chart-wrap { overflow-x: auto }
+.chart-wrap svg { display: block; width: 100%; min-width: 620px; height: auto }
+.chart-wrap text { font-family: var(--f-mono); font-size: 11px; fill: var(--soft) }
+.chart-wrap .wave-label { font-family: var(--f-display); font-weight: 700; font-size: 13px; fill: var(--ice) }
+.chart-wrap .ev { font-family: var(--f-body); font-size: 11.5px; fill: var(--ink) }
+
+/* timeline table */
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--paper) }
+table { width: 100%; border-collapse: collapse; font-size: .92rem }
+th, td { padding: 9px 12px; text-align: left; vertical-align: top; border-top: 1px solid var(--line) }
+th { border-top: 0; color: var(--soft); font: 500 .75rem var(--f-mono); letter-spacing: .06em; text-transform: uppercase }
+td.t, td.m { font-family: var(--f-mono); white-space: nowrap; font-variant-numeric: tabular-nums }
+tr.wave td:first-child { box-shadow: inset 3px 0 0 var(--ice) }
+
+/* bars */
+.bars { display: grid; gap: 14px }
+.bar-row { display: grid; grid-template-columns: 9.5rem 1fr; gap: 12px; align-items: center }
+.bar-row > span { font-size: .9rem; color: var(--soft) }
+.track { position: relative; height: 34px; background: var(--bg); border-radius: 6px; overflow: hidden }
+.fill { position: absolute; inset: 0 auto 0 0; display: flex; align-items: center; padding-left: 10px; font: 600 .95rem var(--f-mono); color: #fff; border-radius: 6px; white-space: nowrap }
+.fill.buy { background: var(--up) } .fill.sell { background: var(--down) } .fill.net { background: var(--ice) }
+.fill.paper { background: var(--soft) } .fill.exit { background: var(--warn) }
+.fill.small { color: var(--ink); background: transparent; padding-left: 0 }
+.fill.small i { display: inline-block; width: 6px; height: 100%; background: var(--ice); border-radius: 3px; margin-right: 10px }
+.fill.small.exit i { background: var(--warn) }
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px }
+
+/* wallets */
+.wallets { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px }
+.w { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0 }
+.w .role { font: 500 .75rem var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ice) }
+.w .addr { display: flex; gap: 8px; align-items: center; min-width: 0 }
+.w .addr a { font-family: var(--f-mono); font-size: .92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0 }
+.w p { font-size: .9rem; color: var(--soft) }
+.w .hold { font: 700 1.15rem var(--f-display); font-variant-numeric: tabular-nums }
+button.copy { flex: none; font: 500 .75rem var(--f-mono); border: 1px solid var(--line); background: var(--bg); color: var(--soft); border-radius: 6px; padding: 2px 8px; cursor: pointer }
+button.copy:hover { color: var(--ink); border-color: var(--soft) }
+
+/* dev bundle */
+.bundle { display: flex; flex-direction: column; gap: 6px }
+.b-row { display: grid; grid-template-columns: minmax(0, 8.5rem) 4rem 1fr; gap: 12px; align-items: center; font-size: .9rem }
+.b-row a { font-family: var(--f-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.b-row .pct { font-family: var(--f-mono); text-align: right }
+.b-row .what { color: var(--soft) }
+
+/* scenarios */
+.ladder { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px }
+.sc { border: 1px solid var(--line); background: var(--paper); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px }
+.sc .lvl { font: 700 1.25rem var(--f-display) }
+.sc.up .lvl { color: var(--up) } .sc.flat .lvl { color: var(--ice) } .sc.down .lvl { color: var(--down) }
+.sc ul { margin: 0; padding-left: 1.1em; font-size: .92rem; display: flex; flex-direction: column; gap: 4px }
+
+.warn { background: var(--warn-bg); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px }
+.warn .eyebrow { color: var(--warn) }
+.people { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px }
+.person { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; font-size: .92rem }
+.person b { font-family: var(--f-mono); font-weight: 500 }
+.person span { color: var(--soft) }
+footer { border-top: 1px solid var(--line); padding-top: 20px; color: var(--soft); font-size: .88rem; display: flex; flex-direction: column; gap: 8px }
+@media (max-width: 520px) {
+  .bar-row { grid-template-columns: 1fr }
+  .b-row { grid-template-columns: minmax(0, 1fr) 3.5rem; } .b-row .what { grid-column: 1 / -1 }
+}
+@media (prefers-reduced-motion: no-preference) { .fill { transition: width .6s ease } }
+</style>
+</head>
+<body>
+
+<main>
+  <header class="hero">
+    <div class="eyebrow">On-chain deep dive · Solana · Nov 6, 2026 · data as of 05:45 UTC</div>
+    <h1><span class="gem">$Diamond</span><br>the meme on pump.fun’s own update</h1>
+    <p class="lede">pump.fun quietly added a 💎 “Diamond” tab to its callout rewards. Fourteen seconds after the first tweet about it, someone launched this coin. Here is who bought, who sold, and what holds the price up.</p>
+    <div class="links">
+      <a class="pill" href="https://gmgn.ai/sol/token/5VCEFq1aATjga39QtDunYjJqYBx67w8V8TXwHrqopump" target="_blank" rel="noopener">GMGN</a>
+      <a class="pill" href="https://dexscreener.com/solana/GhFSaPdvu75KCpsUVk7CZ8A1tdjYeo6YvZx1QiBgwfSJ" target="_blank" rel="noopener">DexScreener</a>
+      <a class="pill" href="https://pump.fun/coin/5VCEFq1aATjga39QtDunYjJqYBx67w8V8TXwHrqopump" target="_blank" rel="noopener">pump.fun</a>
+      <a class="pill" href="https://solscan.io/token/5VCEFq1aATjga39QtDunYjJqYBx67w8V8TXwHrqopump" target="_blank" rel="noopener">Solscan</a>
+      <button class="copy pill" data-copy="5VCEFq1aATjga39QtDunYjJqYBx67w8V8TXwHrqopump" type="button">copy CA 5VCE…opump</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>$335K</b><span>market cap, GMGN, 05:43 UTC</span></div>
+      <div class="stat"><b>$532K</b><span>all-time high (GMGN)</span></div>
+      <div class="stat"><b>$57K</b><span>liquidity, paired with $PUMP</span></div>
+      <div class="stat"><b>3,190</b><span>holders after 5 hours</span></div>
+      <div class="stat"><b>4</b><span>waves since launch</span></div>
+    </div>
+    <div class="verdict">
+      <div class="v plus"><span class="eyebrow">For</span><p>The theme feeds itself: the Diamond algorithm rewards callers for picking bigger coins and holding them, and $Diamond is the obvious pick. A pump.fun employee confirmed the feature. Child coins already trade against it.</p></div>
+      <div class="v minus"><span class="eyebrow">Against</span><p>Almost no new money. $1.39M bought, $1.35M sold, net +$41K. Half the holders are bots, X is mostly paid “VIP TG” spam, and the pool is thin.</p></div>
+      <div class="v odds"><span class="eyebrow">Odds of a new wave</span><p><b>Medium.</b> An official word from pump.fun or the first Diamond payout screenshots could start one. Until then it chops between $140K and $480K.</p></div>
+    </div>
+  </header>
+
+  <section id="chart">
+    <div class="eyebrow">Price</div>
+    <h2>Four waves in five hours</h2>
+    <figure>
+      <div class="chart-wrap" id="chartbox" role="img" aria-label="Market cap of $Diamond in 5-minute steps from launch at 00:28 UTC to 06:20 UTC, with four waves marked: wave 1 to $74K, wave 2 to $368K, wave 3 to $475K, wave 4 from $143K to $369K."></div>
+      <figcaption>Market cap, 5-minute closes, UTC. Shaded: the four waves. Dots: what happened on X at that minute. Sources: GMGN 1-minute candles, GeckoTerminal after 05:40.</figcaption>
+    </figure>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>UTC</th><th>Market cap</th><th>What happened</th></tr></thead>
+        <tbody>
+          <tr><td class="t">00:28:23</td><td class="m">—</td><td><a href="https://x.com/5iZedup/status/2118500708924182553" target="_blank" rel="noopener">@5iZedup</a> tweets about the 💎 on the callout page</td></tr>
+          <tr><td class="t">00:28:37</td><td class="m">~$3–4K</td><td>Coin created. The dev and 5 other wallets buy in the same second</td></tr>
+          <tr><td class="t">00:28–00:31</td><td class="m">$4K → $39K</td><td>The dev’s group sells everything for about $2K profit</td></tr>
+          <tr class="wave"><td class="t">00:28–00:35</td><td class="m">$22K → $74K</td><td><b>Wave 1</b>, ×3.4 in 10 minutes: 1,122 buyers, half the volume through Axiom</td></tr>
+          <tr><td class="t">00:45</td><td class="m">$19.5K</td><td>Dump, −74%</td></tr>
+          <tr><td class="t">01:18</td><td class="m">~$35K</td><td>pump.fun app lead <a href="https://x.com/initwithcarl/status/2118513210273747347" target="_blank" rel="noopener">@initwithcarl</a> posts about the experimental Diamond algorithm</td></tr>
+          <tr class="wave"><td class="t">00:45–02:00</td><td class="m">$19.5K → $368K</td><td><b>Wave 2</b>, ×18.9 in 75 minutes: 3,407 buyers, median buy $9, top 5 wallets only 7.9% of volume</td></tr>
+          <tr class="wave"><td class="t">02:20–02:35</td><td class="m">$257K → $475K</td><td><b>Wave 3</b>. ATH $532K on GMGN. At 02:36 <a href="https://x.com/blknoiz06/status/2118532936932757723" target="_blank" rel="noopener">@blknoiz06</a> posts about his callout rewards</td></tr>
+          <tr><td class="t">02:56–04:32</td><td class="m">$430K → $240K</td><td>Chinese KOLs retell the Diamond algorithm, with exchange referral links</td></tr>
+          <tr><td class="t">04:45</td><td class="m">$143K</td><td>Bottom of the pullback, −70% from ATH</td></tr>
+          <tr class="wave"><td class="t">04:45–05:40</td><td class="m">$143K → $369K</td><td><b>Wave 4</b>, ×2.6. At 05:26 a top-7 holder launches <a href="https://gmgn.ai/sol/token/AN9GYe3h9L4CpK13WQWHw66Psm1xFAN6P6KwjEKVpump" target="_blank" rel="noopener">$Coal</a> paired with Diamond</td></tr>
+          <tr><td class="t">05:43</td><td class="m">$335K</td><td>Snapshot for this report</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="origin">
+    <div class="eyebrow">Origin</div>
+    <h2>A tweet, then a coin 14 seconds later</h2>
+    <div class="prose">
+      <p>On November 6 the pump.fun app got a new 💎 <b>Diamond</b> tab under Callout Rewards, next to the old “Degen” one. People who retold the announcement say it rewards callouts on bigger coins and holding, and penalizes spam. The coin is named after it and trades against <b>$PUMP</b>, not SOL.</p>
+      <ul class="facts">
+        <li><b>First source:</b> <a href="https://x.com/5iZedup/status/2118500708924182553" target="_blank" rel="noopener">@5iZedup</a> at 00:28:23 UTC: “Pumpfun added this diamond to the callout page? Is this a multiplier, or a new season? $Diamond paired w pump”. 499 followers, 13.7K views. The coin appeared 14 seconds later, and its X link points to this exact tweet. The account was created in March 2024 and was called @thejewmeta and @sp1dersol before. Its link to the dev wallet is not proven.</li>
+        <li><b>Confirmation from pump.fun:</b> at 01:18 UTC <a href="https://x.com/initwithcarl/status/2118513210273747347" target="_blank" rel="noopener">@initwithcarl</a>, the pump.fun mobile app lead (6.7K followers), wrote that they are testing experimental algorithms next to the current one, with a small share of the daily rewards pool. 33K views. Wave 2 started right on this post. Summaries: <a href="https://x.com/uslybtc/status/2118565744594264191" target="_blank" rel="noopener">@uslybtc</a>.</li>
+        <li><b>Background:</b> Callout Rewards have paid USDC for callouts since August 13. On October 10 rewards were tied to the profits of people who follow a caller (<a href="https://cryptobriefing.com/pump-fun-callout-rewards-follower-profits/" target="_blank" rel="noopener">Crypto Briefing</a>).</li>
+        <li><b>Original, not a clone:</b> the first and only “Diamond” on Solana. Clones appeared later on Robinhood chain, 8+ of them; the biggest, <span class="mono">0x3C60…8a82</span>, reached $215K. A Chinese post by <a href="https://x.com/seymataan/status/2118547203845128548" target="_blank" rel="noopener">@seymataan</a> calls it “a meme on the platform’s meta” and says similar waves came at the August launch and the October change.</li>
+        <li><b>Community takeover:</b> DexScreener shows a CTO, links updated at 02:48 UTC. 100% of creator fees go to <a href="https://gmgn.ai/sol/address/CnYJQ33NwvNWbg4pDMdgt8gpTo2p9TC4RFkpWbApfVAN" target="_blank" rel="noopener">CnYJQ33…fVAN</a> (locked, not claimed yet). A Chinese post says the creator rewards go to holders. Who owns that wallet is not checked.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="dev">
+    <div class="eyebrow">The dev</div>
+    <h2>The dev’s group was gone in 2.5 minutes</h2>
+    <div class="prose">
+      <p>The dev <a href="https://gmgn.ai/sol/address/8HqYzz88xMMSn934Jb5Kmvkabzp9X6o1zhP5NWP9Qh9f" target="_blank" rel="noopener">8HqYzz88</a> has launched 164 coins and holds 0 of this one. In second 0, five more wallets bought with it; GMGN tags three of them as dev team. Together they took about 15% of supply and sold it while the cap went from $3K to $39K.</p>
+    </div>
+    <div class="bundle">
+      <div class="b-row"><a href="https://gmgn.ai/sol/address/8HqYzz88xMMSn934Jb5Kmvkabzp9X6o1zhP5NWP9Qh9f" target="_blank" rel="noopener">8HqYzz88 (dev)</a><span class="pct">5.50%</span><span class="what">bought for $171, sold at 00:29:08 for $477</span></div>
+      <div class="b-row"><a href="https://gmgn.ai/sol/address/FiFawHqxeTVBhv6YbqbLwDVuvokRpPUM1bNwAyxhGc6W" target="_blank" rel="noopener">FiFawHqx</a><span class="pct">5.09%</span><span class="what">bought for $175, sold one second later for $191</span></div>
+      <div class="b-row"><a href="https://gmgn.ai/sol/address/H9kuqGKNYgPFYCA17uUTkaqXGum7MK8y1GwbS7cxsjDg" target="_blank" rel="noopener">H9kuqGKN</a><span class="pct">2.11%</span><span class="what">sold at 00:30:25 for $636</span></div>
+      <div class="b-row"><a href="https://gmgn.ai/sol/address/2o4kGDTqkixSHzd2rXAAToqBPhkfGNXxCXVCuPRCbptY" target="_blank" rel="noopener">2o4kGDTq</a><span class="pct">1.37%</span><span class="what">sold for $534</span></div>
+      <div class="b-row"><a href="https://gmgn.ai/sol/address/AMDEmVocLtN5ji2gBY7BrmSHEyM5vt6TGszBbg4crMXg" target="_blank" rel="noopener">AMDEmVoc</a><span class="pct">0.67%</span><span class="what">dev team tag</span></div>
+      <div class="b-row"><a href="https://gmgn.ai/sol/address/GuSv8FpuWiuqYKik5LU92XUYG9w6P2xCB4qoWM2WS3ks" target="_blank" rel="noopener">GuSv8Fpu</a><span class="pct">—</span><span class="what">bought in the same second</span></div>
+    </div>
+    <p class="prose">After that the crowd did the work: median buy $9, the top 5 buyers were 8–14% of the volume in every wave.</p>
+  </section>
+
+  <section id="money">
+    <div class="eyebrow">Money</div>
+    <h2>Lots of trading, very little new money</h2>
+    <div class="pair">
+      <figure>
+        <h3>Whole life, 5 hours</h3>
+        <div class="bars">
+          <div class="bar-row"><span>Bought</span><div class="track"><div class="fill buy" style="width:100%">$1.39M</div></div></div>
+          <div class="bar-row"><span>Sold</span><div class="track"><div class="fill sell" style="width:97.1%">$1.35M</div></div></div>
+          <div class="bar-row"><span>Net inflow</span><div class="track"><div class="fill net small"><i></i>+$41K</div></div></div>
+        </div>
+        <figcaption>36,634 buys and 26,325 sells by 9,719 buyers. Last hour: $142K bought, $121K sold, net +$21K.</figcaption>
+      </figure>
+      <figure>
+        <h3>If the top 10 holders sell</h3>
+        <div class="bars">
+          <div class="bar-row"><span>On paper</span><div class="track"><div class="fill paper" style="width:100%">$64K</div></div></div>
+          <div class="bar-row"><span>What they’d get</span><div class="track"><div class="fill exit" style="width:29.7%">$19K</div></div></div>
+          <div class="bar-row"><span>Price after</span><div class="track"><div class="fill sell" style="width:10%">−90%</div></div></div>
+        </div>
+        <figcaption>Constant-product math on the main pool: 83.4M Diamond ($29K) against 7.06M PUMP ($27.9K). Selling even 2% of supply drops the price about 35%. Upper estimate: 3 small pools ignored.</figcaption>
+      </figure>
+    </div>
+    <ul class="facts prose">
+      <li>Buy volume by GMGN tag: paper hands 31%, pump.fun app 28%, fomo 23%, Axiom 19%, fresh wallets 18%.</li>
+      <li>Holders: 3,190. Top 10 incl. the pool 19.2%, bundlers 16%, “entrapment” wallets 25.4%, fresh wallets 14.8%, creator 0%. <a href="https://x.com/trapmapdotfun" target="_blank" rel="noopener">@trapmapdotfun</a> posted “60 linked wallets sitting on 25% of the supply”, which matches the 25% tag. The list itself is not checked.</li>
+      <li>The market cap is priced in $PUMP. PUMP has not added to the move so far, but a PUMP drop hits the cap directly.</li>
+    </ul>
+  </section>
+
+  <section id="wallets">
+    <div class="eyebrow">Wallets</div>
+    <h2>Who to watch</h2>
+    <div class="wallets">
+      <div class="w"><span class="role">Early caller-sniper</span>
+        <div class="addr"><a href="https://gmgn.ai/sol/address/5hAgYC8TJCcEZV7LTXAzkTrm7YL29YXyQQJPCNrG84zM" target="_blank" rel="noopener">5hAgYC8TJCcEZV7LTXAzkTrm7YL29YXyQQJPCNrG84zM</a><button class="copy" data-copy="5hAgYC8TJCcEZV7LTXAzkTrm7YL29YXyQQJPCNrG84zM" type="button">copy</button></div>
+        <span class="hold">1.10%</span>
+        <p>“schoen”. Bought 5.11% for $260 two seconds after launch and posted one of the first callouts at 00:29: “new callout reward feature for diamond hands”. Selling in parts, −$1.6K in the last hour. 30-day PnL +$32.5K.</p></div>
+      <div class="w"><span class="role">Top 2 holder</span>
+        <div class="addr"><a href="https://gmgn.ai/sol/address/FH8xnCwgoQgk3nXuePEdxYB5SZDTWSZav27smVcHjN1q" target="_blank" rel="noopener">FH8xnCwgoQgk3nXuePEdxYB5SZDTWSZav27smVcHjN1q</a><button class="copy" data-copy="FH8xnCwgoQgk3nXuePEdxYB5SZDTWSZav27smVcHjN1q" type="button">copy</button></div>
+        <span class="hold">3.11%</span>
+        <p>Bought $1.5K at 00:32 and has not sold. Was a top holder in $JANE and $NIHILISM. 30-day PnL −$60K.</p></div>
+      <div class="w"><span class="role">Fresh wallet at the bottom</span>
+        <div class="addr"><a href="https://gmgn.ai/sol/address/CCJvyW8Vmazi2wTU3TcPv2roQYihGdKXunb5Fi7xaxb6" target="_blank" rel="noopener">CCJvyW8Vmazi2wTU3TcPv2roQYihGdKXunb5Fi7xaxb6</a><button class="copy" data-copy="CCJvyW8Vmazi2wTU3TcPv2roQYihGdKXunb5Fi7xaxb6" type="button">copy</button></div>
+        <span class="hold">2.38%</span>
+        <p>Created an hour before the coin, funded by <a href="https://gmgn.ai/sol/address/FAF1CFPvCYusNhtH2V6qR7LXTDo8yYLnFRcwAbyb7RW6" target="_blank" rel="noopener">FAF1CFPv</a>. Bought $1.4K exactly at the $19.5K bottom at 00:45:23 and never sold. It and the top 2 holder each received the same 29,440 tokens by transfer.</p></div>
+      <div class="w"><span class="role">Dev of $Coal</span>
+        <div class="addr"><a href="https://gmgn.ai/sol/address/FqJMNzzY1DHz2F1Pt6F7VqCxBWdu8cK2TbfTrYT9zQbT" target="_blank" rel="noopener">FqJMNzzY1DHz2F1Pt6F7VqCxBWdu8cK2TbfTrYT9zQbT</a><button class="copy" data-copy="FqJMNzzY1DHz2F1Pt6F7VqCxBWdu8cK2TbfTrYT9zQbT" type="button">copy</button></div>
+        <span class="hold">1.91%</span>
+        <p>Holder #7. Launched <a href="https://gmgn.ai/sol/token/AN9GYe3h9L4CpK13WQWHw66Psm1xFAN6P6KwjEKVpump" target="_blank" rel="noopener">$Coal</a> paired with Diamond at 05:26. Bought +$1.8K net in the last hour. 30-day PnL +$47.9K.</p></div>
+      <div class="w"><span class="role">Biggest seller, never bought</span>
+        <div class="addr"><a href="https://gmgn.ai/sol/address/64fcNUtAAockLpMJZ1DudHCMHJhLRBmgrmGvbrwmQzQw" target="_blank" rel="noopener">64fcNUtAAockLpMJZ1DudHCMHJhLRBmgrmGvbrwmQzQw</a><button class="copy" data-copy="64fcNUtAAockLpMJZ1DudHCMHJhLRBmgrmGvbrwmQzQw" type="button">copy</button></div>
+        <span class="hold">−$15.2K</span>
+        <p>Zero buys, $15.2K sold in total. The tokens arrived by transfer. Others selling transferred tokens: E9dZhfLw $4.7K, D5K5dgDQ $3.4K, C8v8P9JR $2.6K, Fe1uxWjW $2.6K.</p></div>
+      <div class="w"><span class="role">Buying now</span>
+        <div class="addr"><a href="https://gmgn.ai/sol/address/5YRgrP3mjGzrzirYYN5HAQH19cTYREYwGxW6XRJQUzij" target="_blank" rel="noopener">5YRgrP3mjGzrzirYYN5HAQH19cTYREYwGxW6XRJQUzij</a><button class="copy" data-copy="5YRgrP3mjGzrzirYYN5HAQH19cTYREYwGxW6XRJQUzij" type="button">copy</button></div>
+        <span class="hold">2.39%</span>
+        <p>Largest net buyer of the last hour, +$3.7K, no sells. GMGN tag top_dev, 30-day PnL −$303K. Seen in $GROKIFICATION, $QUEEF, $SWORDCAT, $MERIDIAN and $WWW.</p></div>
+    </div>
+    <div class="prose">
+      <h3>Child coins that buy Diamond</h3>
+      <ul class="facts">
+        <li><a href="https://gmgn.ai/sol/token/EXeyEAhUXrwCf5PDvqVqWkFubQNJPwJd36NiUBHapump" target="_blank" rel="noopener">$HODL “DIAMOND HANDS”</a>, created 01:20 UTC, two minutes after the pump.fun post. ~$24K cap, 153 holders. Its pool wallet <a href="https://gmgn.ai/sol/address/9v4cT8eyjnm3Nrw3kG6te9RwgF6fC5m9FrCQ9T1bbmf2" target="_blank" rel="noopener">9v4cT8ey</a> holds 1.96% of Diamond. Its dev <a href="https://gmgn.ai/sol/address/8nPfm4FGEUxoH22TgNS5xAtzCvEtdHA7AvcnnbCwv66J" target="_blank" rel="noopener">8nPfm4FG</a> was in the launch group of Diamond at 00:29:02.</li>
+        <li><a href="https://gmgn.ai/sol/token/AN9GYe3h9L4CpK13WQWHw66Psm1xFAN6P6KwjEKVpump" target="_blank" rel="noopener">$Coal</a>, created 05:26 UTC, ~$16K cap, 92 holders. Pool wallet <a href="https://gmgn.ai/sol/address/HY9UGeCZYjDMFonJDftp9Lq8Gw4LvrQ38r6ayouor1zU" target="_blank" rel="noopener">HY9UGeCZ</a> holds 1.29%. Every buy of $HODL or $Coal for SOL passes through a Diamond buy. Volume there is small for now.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="x">
+    <div class="eyebrow">X and platforms</div>
+    <h2>Lots of callouts, little real talk</h2>
+    <div class="prose">
+      <p>The pump.fun app logged <b>1,267 callouts from 898 authors</b> in 5 hours. That makes sense: callers get paid for callouts, and the theme is the callout algorithm itself. No big KOL posted about the coin itself; the largest organic posts got 1–2K views.</p>
+    </div>
+    <div class="people">
+      <a class="person" href="https://x.com/5iZedup/status/2118500708924182553" target="_blank" rel="noopener"><b>@5iZedup</b><span>first tweet, 13.7K views</span></a>
+      <a class="person" href="https://x.com/tekbawse/status/2118501897086644666" target="_blank" rel="noopener"><b>@tekbawse</b><span>00:33 “new 💎 diamond tab”, account from Oct 29</span></a>
+      <a class="person" href="https://x.com/initwithcarl/status/2118513210273747347" target="_blank" rel="noopener"><b>@initwithcarl</b><span>pump.fun app lead, 33K views</span></a>
+      <a class="person" href="https://x.com/blknoiz06/status/2118532936932757723" target="_blank" rel="noopener"><b>@blknoiz06</b><span>callout rewards post at the ATH minute, no ticker</span></a>
+      <a class="person" href="https://x.com/cfm_sol/status/2118546845421232330" target="_blank" rel="noopener"><b>@cfm_sol</b><span>35K followers, paid post with OKX referral, 1.9K views</span></a>
+      <a class="person" href="https://x.com/trapmapdotfun" target="_blank" rel="noopener"><b>@trapmapdotfun</b><span>“60 linked wallets on 25%”</span></a>
+      <a class="person" href="https://x.com/seymataan/status/2118547203845128548" target="_blank" rel="noopener"><b>@seymataan</b><span>“a meme on the platform’s meta”</span></a>
+      <a class="person" href="https://x.com/Motier_crypto" target="_blank" rel="noopener"><b>@Motier_crypto</b><span>paid Chinese repost</span></a>
+    </div>
+    <div class="warn">
+      <span class="eyebrow">Don’t click</span>
+      <p>Bots post a template “$DIAMOND is in the listing window… Click below to vote” with a random code (<a href="https://x.com/TFrid7" target="_blank" rel="noopener">@TFrid7</a>, <a href="https://x.com/MaisonDunn1" target="_blank" rel="noopener">@MaisonDunn1</a>, <a href="https://x.com/Dwaynehirsch" target="_blank" rel="noopener">@Dwaynehirsch</a> and others). These look like phishing links. The rest is “X profit from my VIP TG” spam: <a href="https://x.com/realsoltrader" target="_blank" rel="noopener">@realsoltrader</a> has 38.8K followers and 0 likes per post.</p>
+    </div>
+  </section>
+
+  <section id="entries">
+    <div class="eyebrow">Entries</div>
+    <h2>Only the dip paid</h2>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Entry (UTC)</th><th>Cap</th><th>x2 or −40% stop, 4h</th><th>Hold until now</th><th>Peak after</th></tr></thead>
+        <tbody>
+          <tr><td class="t">02:05 after the pump.fun post</td><td class="m">$337K</td><td class="m" style="color:var(--down)">−42%</td><td class="m">−16%</td><td class="m">×1.46</td></tr>
+          <tr><td class="t">03:40 bounce</td><td class="m">$369K</td><td class="m" style="color:var(--down)">−42%</td><td class="m">−23%</td><td class="m">×1.08</td></tr>
+          <tr><td class="t">04:45 bottom</td><td class="m">$124K</td><td class="m" style="color:var(--up)">+94%</td><td class="m">+129%</td><td class="m">×2.91</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">1-minute candles, 3% costs included, the 24-hour window is not over yet. One coin is not a rule: here buying the news above $300K got stopped out in the chop, and only the −70% pullback paid.</p>
+  </section>
+
+  <section id="next">
+    <div class="eyebrow">What next</div>
+    <h2>Three ways it goes</h2>
+    <div class="ladder">
+      <div class="sc up"><span class="eyebrow">Breakout</span><span class="lvl">above $480–532K</span>
+        <ul><li>official post from <a href="https://x.com/Pumpfun" target="_blank" rel="noopener">@Pumpfun</a>, <a href="https://x.com/a1lon9" target="_blank" rel="noopener">@a1lon9</a> or <a href="https://x.com/PumpfunEco" target="_blank" rel="noopener">@PumpfunEco</a></li><li>first Diamond payout screenshots</li><li>an hour with net inflow above +$50K</li><li>pool above $100K</li></ul></div>
+      <div class="sc flat"><span class="eyebrow">Chop, the base case</span><span class="lvl">$140K–$480K</span>
+        <ul><li>waves 3 and 4 both ran $140–260K → $370–475K</li><li>holds while the pump.fun post is fresh and callers farm rewards</li><li>net inflow near zero, half the holders are bots</li></ul></div>
+      <div class="sc down"><span class="eyebrow">Dump</span><span class="lvl">below $143K → $50–80K</span>
+        <ul><li>the 04:45 bottom breaks</li><li>schoen or the top 2 holder sell big</li><li>pump.fun renames or ends the experiment, or PUMP falls</li><li>the crowd rotates into the Robinhood clones</li></ul></div>
+    </div>
+    <div class="prose">
+      <h3>Time to leave if</h3>
+      <ul class="facts"><li>pump.fun stays silent or shuts Diamond down</li><li>net flow for an hour goes below −$20K</li><li>top 10 holders sell</li><li>liquidity falls under $40K</li></ul>
+    </div>
+  </section>
+
+  <section id="open">
+    <div class="eyebrow">Not proven yet</div>
+    <h2>Open questions</h2>
+    <ul class="facts prose">
+      <li>The full text of the pump.fun post and the official Diamond rules: what counts as holding, which cap threshold.</li>
+      <li>Who launched the coin. 14 seconds between tweet and coin, and the coin links to that tweet, but the dev wallet is not tied to the account.</li>
+      <li>Who owns the fee wallet CnYJQ33 and whether fees really go to holders.</li>
+      <li>Who sent the tokens that 64fcNUtA, E9dZhfLw and D5K5dgDQ are selling, and the identical 29,440 tokens to CCJvyW8V and FH8xnCwg.</li>
+      <li>The “60 linked wallets on 25%” list.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>By <a href="https://x.com/iwant1millionn" target="_blank" rel="noopener">@iwant1millionn</a> · updates in <a href="https://t.me/BelowtheChart" target="_blank" rel="noopener">t.me/BelowtheChart</a></p>
+    <p>Sources: GMGN, GeckoTerminal, DexScreener, Helius, X. Times in UTC. Data as of Nov 6, 2026, 05:45 UTC; prices move fast. I hold no position. Not financial advice.</p>
+  </footer>
+</main>
+
+<script>
+(() => {
+  // [unix UTC, close, high, low] market cap, 5-minute buckets
+  const D = [[1793924700,21923,23093,7213],[1793925000,52159,55157,21923],[1793925300,74243,81806,23424],[1793925600,63934,106809,62425],[1793925900,18834,95298,16201],[1793926200,38237,39584,12561],[1793926500,35343,43174,27868],[1793926800,30520,36699,25107],[1793927100,35207,48624,27193],[1793927400,28486,35207,25282],[1793927700,35388,50765,28074],[1793928000,52981,68334,35290],[1793928300,65848,83265,50429],[1793928600,62093,68452,45988],[1793928900,106394,115506,46080],[1793929200,150329,181321,88571],[1793929500,184010,195424,133922],[1793929800,238939,285735,184010],[1793930100,346852,375746,238939],[1793930400,338014,391023,322028],[1793930700,344801,375057,275431],[1793931000,347781,446751,344474],[1793931300,324179,370924,320895],[1793931600,254884,356747,229553],[1793931900,336753,353425,254884],[1793932200,376766,433104,336753],[1793932500,477456,477456,361784],[1793932800,442661,493294,415429],[1793933100,441847,487041,377942],[1793933400,447360,493146,405800],[1793933700,370505,470464,370505],[1793934000,333194,411858,333194],[1793934300,405623,417646,312868],[1793934600,404323,442082,369666],[1793934900,391780,435719,375413],[1793935200,373152,429131,372287],[1793935500,375035,378787,287976],[1793935800,332143,375035,313867],[1793936100,380465,409786,334787],[1793936400,397053,398126,365341],[1793936700,333349,397431,333200],[1793937000,334858,334858,290019],[1793937300,300119,334816,266168],[1793937600,210482,303116,210482],[1793937900,234386,253861,210004],[1793938200,234473,258088,234111],[1793938500,310864,310864,231420],[1793938800,250966,310864,250966],[1793939100,253415,270775,250966],[1793939400,232158,273847,232158],[1793939700,187951,227527,166303],[1793940000,153339,187951,147095],[1793940300,142412,153478,122763],[1793940600,195996,219731,129093],[1793940900,228904,234205,195996],[1793941200,186210,228904,184202],[1793941500,182450,196837,182416],[1793941800,191191,191191,176847],[1793942100,189757,194104,169337],[1793942400,200224,200224,183808],[1793942700,316682,316770,189445],[1793943000,314985,356831,290879],[1793943300,354592,354592,309419]];
+  const T0 = 1793924700, T1 = 1793943600;
+  const hm = s => { const d = new Date(s * 1000); return String(d.getUTCHours()).padStart(2, "0") + ":" + String(d.getUTCMinutes()).padStart(2, "0") };
+  const at = (h, m) => Date.UTC(2026, 10, 6, h, m) / 1000;
+  const waves = [["1", at(0, 28), at(0, 35)], ["2", at(0, 45), at(2, 0)], ["3", at(2, 20), at(2, 35)], ["4", at(4, 45), at(5, 40)]];
+  const events = [[at(0, 28), "first tweet"], [at(1, 18), "pump.fun post"], [at(2, 36), "Ansem post"], [at(4, 45), "bottom $143K"], [at(5, 26), "$Coal launch"]];
+  const W = 860, H = 380, L = 56, R = 18, Tp = 34, B = 34, YM = 550000;
+  const x = t => L + (t - T0) / (T1 - T0) * (W - L - R);
+  const y = v => Tp + (1 - v / YM) * (H - Tp - B);
+  const ns = "http://www.w3.org/2000/svg";
+  const el = (n, a, txt) => { const e = document.createElementNS(ns, n); for (const k in a) e.setAttribute(k, a[k]); if (txt) e.textContent = txt; return e };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, "aria-hidden": "true" });
+  const css = getComputedStyle(document.documentElement), c = n => css.getPropertyValue(n).trim();
+  for (const [n, a, b] of waves) {
+    svg.append(el("rect", { x: x(a), y: Tp, width: Math.max(4, x(b) - x(a)), height: H - Tp - B, fill: c("--ice-bg") }));
+    svg.append(el("text", { x: (x(a) + x(b)) / 2, y: Tp - 10, "text-anchor": "middle", class: "wave-label" }, "wave " + n));
+  }
+  for (const v of [0, 100000, 200000, 300000, 400000, 500000]) {
+    svg.append(el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: c("--chart-grid"), "stroke-width": 1 }));
+    svg.append(el("text", { x: L - 8, y: y(v) + 4, "text-anchor": "end" }, v ? "$" + v / 1000 + "K" : "$0"));
+  }
+  for (let h = 1; h <= 5; h++) svg.append(el("text", { x: x(at(h, 0)), y: H - 12, "text-anchor": "middle" }, String(h).padStart(2, "0") + ":00"));
+  for (const [t, cl, hi, lo] of D) svg.append(el("line", { x1: x(t + 150), x2: x(t + 150), y1: y(hi), y2: y(lo), stroke: c("--soft"), "stroke-opacity": .45, "stroke-width": 2 }));
+  svg.append(el("polyline", { points: D.map(([t, cl]) => `${x(t + 300).toFixed(1)},${y(cl).toFixed(1)}`).join(" "), fill: "none", stroke: c("--chart-line"), "stroke-width": 2.5, "stroke-linejoin": "round" }));
+  svg.append(el("line", { x1: L, x2: W - R, y1: y(532000), y2: y(532000), stroke: c("--warn"), "stroke-dasharray": "4 4" }));
+  svg.append(el("text", { x: W - R, y: y(532000) - 6, "text-anchor": "end" }, "ATH $532K"));
+  events.forEach(([t, label], i) => {
+    const near = D.reduce((p, d) => Math.abs(d[0] + 300 - t) < Math.abs(p[0] + 300 - t) ? d : p);
+    const cy = y(near[1]), up = cy > Tp + 70;          // подпись над точкой, если над ней есть место
+    svg.append(el("circle", { cx: x(t), cy, r: 5, fill: c("--paper"), stroke: c("--ice"), "stroke-width": 2.5 }));
+    const ty = up ? cy - 30 : Math.min(H - B - 8, cy + 24);
+    svg.append(el("line", { x1: x(t), x2: x(t), y1: up ? cy - 6 : cy + 6, y2: up ? ty + 4 : ty - 12, stroke: c("--ice"), "stroke-width": 1 }));
+    svg.append(el("text", { x: x(t) + (i === 0 ? 2 : 0), y: ty, "text-anchor": i === 0 ? "start" : i === events.length - 1 ? "end" : "middle", class: "ev" }, label));
+  });
+  const last = D[D.length - 1];
+  svg.append(el("circle", { cx: x(last[0] + 300), cy: y(last[1]), r: 5, fill: c("--ice") }));
+  svg.append(el("text", { x: x(last[0] + 300) - 8, y: y(last[1]) - 10, "text-anchor": "end", class: "ev" }, "$" + Math.round(last[1] / 1000) + "K at " + hm(last[0] + 300)));
+  document.getElementById("chartbox").append(svg);
+
+  document.querySelectorAll("button.copy").forEach(b => b.addEventListener("click", () => {
+    const v = b.dataset.copy, old = b.textContent;
+    const done = ok => { b.textContent = ok ? "copied" : "select & copy"; setTimeout(() => b.textContent = old, 1400) };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(() => done(true), () => done(false));
+    else done(false);
+  }));
+})();
+</script>
+</body>
+</html>
