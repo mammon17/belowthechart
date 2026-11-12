@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>$Chinese Deep Dive</title>
+<meta name="description" content="On-chain deep dive into $Chinese (“Chinese time in my life”): a two-month-old slogan coin that rode the $MIHAO meta to $365K, a fake @ansem post, a thin pool and no catalyst of its own. Every wallet and account linked.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a Q&A dossier on paper. One thesis up top, then questions the reader would ask, each answered with the chain. */
+:root {
+  --bg: #f6f1e7; --paper: #fffdf8; --ink: #1a1714; --soft: #6e665b; --line: #e3dace;
+  --ice: #b8322a; --ice-bg: #f6e1dc; --jade: #17786a; --jade-bg: #dcefe9;
+  --up: #17786a; --up-bg: #dcefe9; --down: #b8322a; --down-bg: #f6e1dc; --warn: #8a5a00; --warn-bg: #fbecc7;
+  --chart-grid: #e8dfd2;
+  --f-display: "DM Serif Display", Georgia, serif;
+  --f-body: "DM Sans", system-ui, sans-serif;
+  --f-mono: "DM Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141210; --paper: #1d1a17; --ink: #efe8dc; --soft: #a69d90; --line: #332e28;
+  --ice: #f0705f; --ice-bg: #3a1c17; --jade: #4cc3ac; --jade-bg: #12302a;
+  --up: #4cc3ac; --up-bg: #12302a; --down: #f0705f; --down-bg: #3a1c17; --warn: #f2c25b; --warn-bg: #34280c;
+  --chart-grid: #2a2520; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #141210; --paper: #1d1a17; --ink: #efe8dc; --soft: #a69d90; --line: #332e28;
+  --ice: #f0705f; --ice-bg: #3a1c17; --jade: #4cc3ac; --jade-bg: #12302a;
+  --up: #4cc3ac; --up-bg: #12302a; --down: #f0705f; --down-bg: #3a1c17; --warn: #f2c25b; --warn-bg: #34280c;
+  --chart-grid: #2a2520; color-scheme: dark }
+* { box-sizing: border-box }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.62 var(--f-body);
+  padding: 32px max(16px, env(safe-area-inset-right, 0px)) 72px max(16px, env(safe-area-inset-left, 0px)) }
+main { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px }
+a { color: var(--ice); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--ice) 40%, transparent) }
+a:hover { text-decoration-color: var(--ice) }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--ice); outline-offset: 2px; border-radius: 3px }
+p { margin: 0 }
+h1, h2, h3 { margin: 0; font-weight: 400; text-wrap: balance }
+.kicker { font: 500 .78rem var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--soft) }
+.mast { border-top: 6px double var(--ink); border-bottom: 1px solid var(--ink); padding: 12px 0; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px }
+.hero { display: flex; flex-direction: column; gap: 22px }
+.hero h1 { font: 400 clamp(2.3rem, 7.4vw, 4.6rem)/1.02 var(--f-display); letter-spacing: -0.01em }
+.hero h1 .c { color: var(--ice) } .hero h1 .m { color: var(--jade); font-style: italic }
+.lede { font-size: 1.15rem; max-width: 62ch; color: var(--ink) }
+.chips { display: flex; flex-wrap: wrap; gap: 8px 14px; font: 500 .85rem var(--f-mono) }
+.chips a, .chips button { color: var(--ink) }
+button.copy { font: 500 .8rem var(--f-mono); border: 1px solid var(--ink); background: transparent; color: var(--ink); border-radius: 0; padding: 3px 10px; cursor: pointer }
+button.copy:hover { background: var(--ink); color: var(--bg) }
+.score { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink) }
+.score div { padding: 14px 12px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px }
+.score div:first-child { border-left: 0; padding-left: 0 }
+.score b { font: 400 2rem/1.05 var(--f-display); font-variant-numeric: lining-nums tabular-nums }
+.score span { font: 400 .76rem var(--f-mono); color: var(--soft); text-transform: uppercase; letter-spacing: .06em }
+.verdict { border-left: 4px solid var(--ice); padding: 6px 0 6px 18px; font: 400 1.35rem/1.4 var(--f-display) }
+.verdict b { color: var(--ice); font-weight: 400 }
+figure { margin: 0; display: flex; flex-direction: column; gap: 10px }
+.chart { background: var(--paper); border: 1px solid var(--line); padding: 14px 10px 6px }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible }
+.chart text { font: 12px var(--f-mono); fill: var(--soft) }
+figcaption { font-size: .86rem; color: var(--soft) }
+.key { display: flex; gap: 18px; flex-wrap: wrap; font: 500 .85rem var(--f-mono) }
+.key i { display: inline-block; width: 26px; height: 3px; vertical-align: middle; margin-right: 8px }
+ol.marks { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 8px 22px; font-size: .9rem }
+ol.marks li { display: grid; grid-template-columns: 1.7rem 1fr; gap: 8px; align-items: start }
+ol.marks .n { width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 1.5px solid var(--ice); color: var(--ice); font: 500 .78rem/1.35rem var(--f-mono); text-align: center }
+ol.marks .t { font-family: var(--f-mono); font-size: .8rem; color: var(--soft); display: block }
+.qa { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: 18px 36px; border-top: 1px solid var(--ink); padding-top: 18px }
+.qa > h2 { font: 400 1.75rem/1.12 var(--f-display) }
+.qa > h2 small { display: block; font: 500 .74rem var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--soft); margin-bottom: 8px }
+.ans { display: flex; flex-direction: column; gap: 14px; min-width: 0 }
+.ans ul { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 8px }
+.short { font: 400 1.25rem/1.35 var(--f-display) }
+.tl { list-style: none; margin: 0; padding: 0 0 0 18px; border-left: 2px solid var(--line); display: flex; flex-direction: column; gap: 12px }
+.tl li { position: relative; font-size: .95rem }
+.tl li::before { content: ""; position: absolute; left: -24px; top: .5em; width: 10px; height: 10px; border-radius: 50%; background: var(--bg); border: 2px solid var(--soft) }
+.tl li.hot::before { border-color: var(--ice); background: var(--ice) }
+.tl .w { display: block; font: 500 .8rem var(--f-mono); color: var(--soft) }
+.tl .cap { font-family: var(--f-mono); font-weight: 500 }
+.case { background: var(--ice-bg); padding: 18px 20px; display: flex; flex-direction: column; gap: 10px }
+.case h3 { font: 400 1.35rem var(--f-display); color: var(--ice) }
+.steps { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 4.8rem 1fr; gap: 6px 14px; font-size: .92rem }
+.steps dt, .steps .tm { font: 500 .85rem var(--f-mono) }
+.wl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px }
+.wcard { background: var(--paper); border: 1px solid var(--line); padding: 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0 }
+.wcard .pct { font: 400 1.8rem/1 var(--f-display) }
+.wcard a { font: 500 .82rem var(--f-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block }
+.wcard p { font-size: .9rem; color: var(--soft) }
+.exit { display: flex; flex-direction: column; gap: 8px }
+.exit .row { display: grid; grid-template-columns: 9rem 1fr; gap: 12px; align-items: center; font-size: .9rem }
+.exit .bar { height: 26px; display: flex; align-items: center; padding: 0 8px; font: 500 .85rem var(--f-mono); color: #fff; white-space: nowrap }
+.flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); background: var(--paper) }
+.flow div { padding: 12px 14px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px }
+.flow div:first-child { border-left: 0 }
+.flow b { font: 400 1.5rem var(--f-display) }
+.flow span { font: 400 .8rem var(--f-mono); color: var(--soft) }
+.odds { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--line) }
+.odds div { display: grid; grid-template-columns: 7.5rem 7.5rem 1fr; gap: 14px; padding: 12px 14px; border-top: 1px solid var(--line); background: var(--paper); font-size: .92rem }
+.odds div:first-child { border-top: 0 }
+.odds .p { font: 500 .8rem var(--f-mono); text-transform: uppercase; letter-spacing: .06em }
+.odds .lv { font: 400 1.2rem var(--f-display) }
+.odds .hi .p { color: var(--jade) } .odds .lo .p { color: var(--ice) }
+footer { border-top: 6px double var(--ink); padding-top: 16px; color: var(--soft); font-size: .88rem; display: flex; flex-direction: column; gap: 6px }
+
+/* top holders (same component on every page; styled to this page) */
+.holders { border: 1px solid var(--line); background: var(--paper) }
+.holders table { table-layout: auto; width: 100%; border-collapse: collapse }
+.holders th { font: 500 .7rem var(--f-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--soft); border-bottom: 1px solid var(--ink) }
+.holders td, .holders th { text-align: right; padding: 8px 8px }
+.holders tr + tr td { border-top: 1px solid var(--line) }
+.holders td:first-child, .holders th:first-child, .holders td.tags, .holders th:last-child { text-align: left }
+.holders td { font-family: var(--f-mono); font-size: .82rem; font-variant-numeric: tabular-nums; white-space: nowrap }
+.holders td small { display: block; font-size: .72rem; color: var(--soft) }
+.holders td.tags { white-space: normal; min-width: 0 }
+.holders a.wl { cursor: pointer }
+.holders .tg { display: inline-block; font: 500 .68rem var(--f-mono); background: var(--bg); border: 1px solid var(--line); padding: 0 6px; margin: 1px 2px 1px 0; color: var(--soft) }
+.holders .note { display: block; font-family: var(--f-body); color: var(--soft); font-size: .74rem; white-space: normal }
+.pos { color: var(--up) } .neg { color: var(--down) } .muted { color: var(--soft) }
+@media (max-width: 720px) {
+  .holders { border: 0; background: none }
+  .holders thead { display: none }
+  .holders table, .holders tbody { display: block }
+  .holders tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px; background: var(--paper); border: 1px solid var(--line); padding: 12px; margin-bottom: 8px }
+  .holders tr + tr td { border-top: 0 }
+  .holders td { display: block; border: 0; padding: 0; text-align: left !important; white-space: normal }
+  .holders td::before { content: attr(data-l); display: block; font: 500 .66rem var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--soft) }
+  .holders td:first-child, .holders td.tags { grid-column: 1 / -1 }
+  .holders td:first-child::before, .holders td.tags::before { display: none }
+  .holders td:first-child a { font-size: .95rem }
+}
+#wpop { position: fixed; z-index: 20; width: min(340px, calc(100vw - 32px)); background: var(--paper); border: 1px solid var(--ink);
+  box-shadow: 0 12px 32px rgba(0,0,0,.25); padding: 14px; display: none; flex-direction: column; gap: 8px; font-size: .88rem }
+#wpop .hd { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start }
+#wpop .big { font: 400 1.9rem/1.05 var(--f-display); font-variant-numeric: tabular-nums }
+#wpop .row { display: flex; justify-content: space-between; gap: 10px }
+#wpop .per { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px }
+#wpop .per div { padding: 6px 4px; text-align: center; font: 500 .8rem var(--f-mono) }
+#wpop .bk { display: flex; height: 7px; overflow: hidden; background: var(--bg) }
+#wpop .x { position: absolute; top: 6px; right: 10px; border: 0; background: none; color: var(--soft); font-size: 1.2rem; cursor: pointer; display: none }
+@media (hover: none) { #wpop .x { display: block } }
+
+@media (max-width: 760px) {
+  .qa { grid-template-columns: 1fr; gap: 12px }
+  .score { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .score div { border-left: 0; padding-left: 0; border-top: 1px solid var(--line) }
+  .score div:nth-child(-n+2) { border-top: 0 }
+  .score div:last-child { grid-column: 1 / -1 }
+  .odds div { grid-template-columns: 1fr 1fr; } .odds div p { grid-column: 1 / -1 }
+  .exit .row { grid-template-columns: 1fr }
+  .flow { grid-template-columns: 1fr } .flow div { border-left: 0; border-top: 1px solid var(--line) } .flow div:first-child { border-top: 0 }
+}
+</style>
+</head>
+<body>
+
+<main>
+  <div class="mast"><span class="kicker">Below the Chart · on-chain dossier</span><span class="kicker">Solana · Nov 12, 2026 · data 07:07 UTC</span></div>
+
+  <header class="hero">
+    <h1><span class="c">$Chinese</span> is the slogan.<br><span class="m">$MIHAO</span> has the money.</h1>
+    <p class="lede">“You met me at a very Chinese time in my life” is a meme from April 2025. A coin with that line was launched in September and slept at $40–65K. On Nov 11 the Solana “Chinese meta” started around a cat coin, $MIHAO, and this coin rode along to $365K. Then the crowd left. It has a famous phrase, a three-year-old X account and a thin pool. It does not have a reason of its own.</p>
+    <div class="chips">
+      <button class="copy" data-copy="Tm2iqbxYjKpW8xCMe6q1xUraNMNzcG5xMztAir3pump" type="button">copy CA Tm2i…pump</button>
+      <a href="https://gmgn.ai/sol/token/Tm2iqbxYjKpW8xCMe6q1xUraNMNzcG5xMztAir3pump" target="_blank" rel="noopener">GMGN</a>
+      <a href="https://dexscreener.com/solana/Tm2iqbxYjKpW8xCMe6q1xUraNMNzcG5xMztAir3pump" target="_blank" rel="noopener">DexScreener</a>
+      <a href="https://solscan.io/token/Tm2iqbxYjKpW8xCMe6q1xUraNMNzcG5xMztAir3pump" target="_blank" rel="noopener">Solscan</a>
+      <a href="https://x.com/chinesetimeinmy" target="_blank" rel="noopener">@chinesetimeinmy</a>
+      <a href="https://chinesetimeinmylife.com/" target="_blank" rel="noopener">chinesetimeinmylife.com</a>
+      <a href="../mihao/">my $MIHAO breakdown</a>
+    </div>
+    <div class="score">
+      <div><b>$223K</b><span>market cap now</span></div>
+      <div><b>$365K</b><span>high, Nov 11</span></div>
+      <div><b>−39%</b><span>from the high</span></div>
+      <div><b>$41K</b><span>liquidity</span></div>
+      <div><b>1,041</b><span>holders</span></div>
+    </div>
+    <p class="verdict">Odds of another ×2 from here: <b>low.</b> It needs $MIHAO to run again, or a real big account to post this coin’s address. Neither has happened.</p>
+  </header>
+
+  <figure>
+    <div class="key"><span><i style="background:var(--ice)"></i>$Chinese</span><span><i style="background:var(--jade)"></i>$MIHAO</span><span><i style="background:var(--line);height:10px"></i>$Chinese volume per hour</span></div>
+    <div class="chart" id="chartbox" role="img" aria-label="Both coins indexed to Nov 10, 16:00 UTC, log scale. $MIHAO goes to about ×27 overnight and holds near ×20. $Chinese goes to about ×5 the next afternoon and settles near ×4. $Chinese hourly volume peaks around $77K and falls to $1–14K."></div>
+    <figcaption>Market cap of each coin divided by its own value at Nov 10, 16:00 UTC, hourly closes, log scale. Bars: $Chinese volume per hour. Source: GeckoTerminal hourly candles of each coin’s main pool. The 5-minute high of $Chinese, ×6.6, is above the hourly closes.</figcaption>
+    <ol class="marks">
+      <li><span class="n">1</span><span><span class="t">Nov 11, 01:23</span>Ansem reposts pump.fun’s “The Chinese cat is bringing bagworkers back”: about $MIHAO</span></li>
+      <li><span class="n">2</span><span><span class="t">Nov 11, 12:20</span>@chinesetimeinmy posts <a href="https://x.com/chinesetimeinmy/status/2120491977653256291" target="_blank" rel="noopener">“米浩 🐱”</a> (Mihao), its best post: 14.5K views</span></li>
+      <li><span class="n">3</span><span><span class="t">Nov 11, 13:51</span>a look-alike <a href="https://x.com/ansem" target="_blank" rel="noopener">@ansem</a> posts this coin’s CA</span></li>
+      <li><span class="n">4</span><span><span class="t">Nov 11, 17:30</span>Ansem reposts a <a href="https://x.com/blknoiz06/status/2120569778892886124" target="_blank" rel="noopener">pump.fun ad</a>: “You met me at a very Chinese time in my life. Buy $mihao…”</span></li>
+      <li><span class="n">5</span><span><span class="t">Nov 11, 19:30</span>$Chinese all-time high, $365K on 5-minute closes</span></li>
+    </ol>
+  </figure>
+
+  <section class="qa">
+    <h2><small>Question 1</small>Is it the original?</h2>
+    <div class="ans">
+      <p class="short">Of the phrase, no. Of the coins, it’s the biggest by far.</p>
+      <ul>
+        <li>The line parodies the end of Fight Club. Know Your Meme traces it to an X post from April 5, 2025, and TikTok to October 2025 (<a href="https://knowyourmeme.com/memes/you-met-me-at-a-very-chinese-time-in-my-life" target="_blank" rel="noopener">KYM</a>). “Chinamaxxing” got coverage from <a href="https://www.nbcnews.com/pop-culture/viral/turning-chinese-trend-tiktok-social-media-rcna255478" target="_blank" rel="noopener">NBC</a> and <a href="https://www.npr.org/2026/03/13/nx-s1-5743795/some-gen-z-americans-cant-stop-chinamaxxing" target="_blank" rel="noopener">NPR</a>.</li>
+        <li>This coin was made on pump.fun on Sep 7 by <a href="https://gmgn.ai/sol/address/8ExM9dgr9e73DNf79CC6CmUUvicmqMw7xdddzH5uVArs" target="_blank" rel="noopener">8ExM9dgr</a>, a serial creator with 202 coins. It bought $627 with a 7-wallet bundle and sold $1.2K within ten minutes. None of the 15 launch bundles holds anything now.</li>
+        <li>13 Solana coins share the name and 26 the ticker, most of them made on Nov 11. This one is two months older and much larger.</li>
+        <li>The X account <a href="https://x.com/chinesetimeinmy" target="_blank" rel="noopener">@chinesetimeinmy</a> was created in June 2022, three years before the meme: bought or renamed. 7.4K followers, blue check. The site <a href="https://chinesetimeinmylife.com/" target="_blank" rel="noopener">chinesetimeinmylife.com</a> is a fan page; CoinGecko lists a different site. No team, no roadmap, no CTO announcement.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="qa">
+    <h2><small>Question 2</small>How did it get to $365K?</h2>
+    <div class="ans">
+      <ol class="tl">
+        <li><span class="w">Sep 7 – Oct 16</span>Launch, migration on Sep 11, first TikTok wave to $77K, low of $22K, then a run to the October high: <span class="cap">$239K</span></li>
+        <li><span class="w">Oct 24 – Nov 9</span>A long fade to a base of <span class="cap">$40–65K</span></li>
+        <li class="hot"><span class="w">Nov 10, 16:10 → Nov 11, 00:25</span>The cat meta starts overnight: <span class="cap">$53K → $172K</span>. 184 buyers, the fomo app and Axiom about a third each</li>
+        <li class="hot"><span class="w">Nov 11, 03:40 → 14:10</span><span class="cap">$114K → $280K</span>. 376 buyers, $62K bought vs $54K sold. The 米浩 post, the look-alike @ansem post, a Telegram call at $150K</li>
+        <li class="hot"><span class="w">Nov 11, 16:45 → 19:30</span><span class="cap">$202K → $365K</span>. Pure retail: the fomo app 54% of buys, median buy $10</li>
+        <li><span class="w">Nov 11, 21:35 → now</span>−40% in two hours, then nine hours flat at <span class="cap">$190–230K</span>. A Polymarket post about Jensen Huang got 189K views and moved nothing</li>
+      </ol>
+      <p>Real Ansem (<a href="https://x.com/blknoiz06" target="_blank" rel="noopener">@blknoiz06</a>) never mentioned $Chinese. pump.fun used the slogan to sell a different coin.</p>
+    </div>
+  </section>
+
+  <section class="qa">
+    <h2><small>Question 3</small>Did Ansem buy it?</h2>
+    <div class="ans">
+      <div class="case">
+        <h3>No. A look-alike posted, and a wallet named ANSEM… traded around it</h3>
+        <p><a href="https://x.com/ansem" target="_blank" rel="noopener">@ansem</a> (33.8K followers) says in its own bio “Not affiliated with @blknoiz06”. It posted “every1 will be $chinese” with the CA. The wallet <a href="https://gmgn.ai/sol/address/ANSEMxTGedM7pWjNCN5Lngts8rjkmx4LhSn9wrTa6s7a" target="_blank" rel="noopener">ANSEMxTG…</a>:</p>
+        <dl class="steps">
+          <dt>12:55</dt><dd>buys $3,980</dd>
+          <dt>13:51</dt><dd>the @ansem post goes out (235 likes)</dd>
+          <dt>13:52, 15:47</dt><dd>buys $498 twice</dd>
+          <dt>15:59, 16:01</dt><dd>sells $3,248 and $3,134. Out with about +$1.4K</dd>
+        </dl>
+        <p style="font-size:.88rem">The timing lines up. There is no transfer between the account and the wallet, so the link is not proven.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="qa">
+    <h2><small>Question 4</small>Who holds it?</h2>
+    <div class="ans">
+      <p class="short">Mostly old holders who sat through −80%, and nobody from the launch.</p>
+      <div class="wl-grid">
+        <div class="wcard"><span class="kicker">top 1 · since Oct 1</span><span class="pct">3.94%</span><a href="https://gmgn.ai/sol/address/96B2nyf8VL1VDycZaaGH3vLa8X8JMvitFed4HtRAkMVv" target="_blank" rel="noopener">96B2nyf8VL1VDycZaaGH3vLa8X8JMvitFed4HtRAkMVv</a><p>Bought $2.9K and hasn’t moved since Oct 2. Selling it all would cut the price about in half.</p></div>
+        <div class="wcard"><span class="kicker">top 2 · since Sep 25</span><span class="pct">3.45%</span><a href="https://gmgn.ai/sol/address/HtqSY3JD3bwyTYDYDcAG2KxaA9xSzdmzEwg1BDkAdgN6" target="_blank" rel="noopener">HtqSY3JD3bwyTYDYDcAG2KxaA9xSzdmzEwg1BDkAdgN6</a><p>A September holder, has sold about a third.</p></div>
+        <div class="wcard"><span class="kicker">top 4 · from Coinbase</span><span class="pct">2.94%</span><a href="https://gmgn.ai/sol/address/FzwKJTKjAeDqP9NdcMMftKFPTm3aJpKZEZuhjtb7QyGV" target="_blank" rel="noopener">FzwKJTKjAeDqP9NdcMMftKFPTm3aJpKZEZuhjtb7QyGV</a><p>Bought the base on Nov 6, before the meta. Not selling.</p></div>
+        <div class="wcard"><span class="kicker">top 5 · already selling</span><span class="pct">2.55%</span><a href="https://gmgn.ai/sol/address/4iUbw1pdpLMMcphcEjHZwwF12ZyvMDwnqvwNCV3wmv8Y" target="_blank" rel="noopener">4iUbw1pdpLMMcphcEjHZwwF12ZyvMDwnqvwNCV3wmv8Y</a><p>Sold $5.1K so far, about three quarters of its bag.</p></div>
+      </div>
+      <ul>
+        <li><a href="https://gmgn.ai/sol/address/93PnncnPdCs6a9kKxUgubk3yXvB2stmpVr8Ykx4vC8PY" target="_blank" rel="noopener">93PnncnP</a> (2.18%) and <a href="https://gmgn.ai/sol/address/4dBQMwrL3sB7s9hdMRR1veyqpShf8sNcEUxdNYrZixbP" target="_blank" rel="noopener">4dBQMwrL</a> pass tokens back and forth: one owner, an early buyer from Sep 12, selling small.</li>
+        <li><a href="https://gmgn.ai/sol/address/3thfxeojFTjgX2vBJ7fEJU7RjcSyVCujmspLkJZchFkj" target="_blank" rel="noopener">3thfxeoj</a> “received without a buy” from a fomo-app executor: that is a fomo purchase, not a gift.</li>
+        <li>The shared funders behind several holders (<a href="https://gmgn.ai/sol/address/5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9" target="_blank" rel="noopener">5tzFkiKs</a> and others) also show up on dozens of unrelated coins: services, not a team.</li>
+        <li>1,041 holders, bots 37.5%, fresh wallets 2.8%, creator 0%.</li>
+      </ul>
+      <div class="holders" id="holders"><table><thead><tr><th>Wallet</th><th>Share</th><th>Value</th><th>On this coin</th><th>30 days</th><th>All time</th><th>Win rate</th><th>Tags</th></tr></thead><tbody id="hbody"></tbody></table></div>
+      <p class="muted" id="hnote" style="font-size:.82rem"></p>
+      <p class="muted" style="font-size:.82rem">Hover a wallet (tap on a phone) for its card. “On this coin” is profit on $Chinese so far, realized plus unrealized. Almost the whole top 20 is green.</p>
+    </div>
+  </section>
+
+  <section class="qa">
+    <h2><small>Question 5</small>Can they get out?</h2>
+    <div class="ans">
+      <p class="short">Not all at once. The pool holds about $21.5K of SOL.</p>
+      <div class="exit">
+        <div class="row"><span>Top 10 bags</span><div class="bar" style="width:100%;background:var(--ink)">$58.9K · 26.5% of supply</div></div>
+        <div class="row"><span>SOL in the pool</span><div class="bar" style="width:36.5%;background:var(--jade)">$21.5K</div></div>
+        <div class="row"><span>If all 10 sell</span><div class="bar" style="width:26.6%;background:var(--ice)">~$15.7K</div></div>
+      </div>
+      <p>Selling the whole top 10 into the pool would return about 184 SOL and drop the price ~93%. One 3.94% holder alone would cut it ~49%. What softens it: the top is spread out, and the biggest holders haven’t moved in weeks.</p>
+    </div>
+  </section>
+
+  <section class="qa">
+    <h2><small>Question 6</small>Is anyone still buying?</h2>
+    <div class="ans">
+      <div class="flow">
+        <div><b>+$8.6K</b><span>net, 24 h · $210K in / $202K out</span></div>
+        <div><b>+$1.1K</b><span>net, 6 h · $21.8K / $20.7K</span></div>
+        <div><b>$1.0K</b><span>bought, last hour</span></div>
+      </div>
+      <ul>
+        <li>Hourly volume: $77K at the peak hour on Nov 11, $1–14K since. Neither accumulation nor distribution, just fading.</li>
+        <li>Biggest sellers of the day: <a href="https://gmgn.ai/sol/address/2cEH2PFw1USkZooDGGdjSiiWPUcAoKaTCg8ycp4ogGwj" target="_blank" rel="noopener">2cEH2PFw</a> $9.7K without a single buy (closing an old bag), <a href="https://gmgn.ai/sol/address/8uxgymLG6d9s81jRmBQ4x1gGyQiU2v2VXDWmtcKa16LR" target="_blank" rel="noopener">8uxgymLG</a> $4.0K in one sell, the ANSEMx wallet $6.4K.</li>
+        <li>Buyers in the last 6 hours are small, up to $1.4K. <a href="https://gmgn.ai/sol/address/EMp115dQaDGcMnogrB8FnxBc9XF6AZAq4QJ9wFK5utFB" target="_blank" rel="noopener">EMp115dQ</a> came in at the start of the meta and is +$37K over 30 days elsewhere; it has already sold about half here.</li>
+        <li>Shill bots joined after the top: four accounts with the same “keep $Chinese on your airdrop radar” text, and “6X up from my call” / “27x profit” posts.</li>
+      </ul>
+      <p class="muted" style="font-size:.88rem">Entries in hindsight: buying at the start of the meta under $140K reached ×2; buying after the look-alike post at $278K, or at the top, ended −6% to −42% under a fixed ×2-or-−40% plan. One coin, not a statistic.</p>
+    </div>
+  </section>
+
+  <section class="qa">
+    <h2><small>Question 7</small>What happens next?</h2>
+    <div class="ans">
+      <div class="odds">
+        <div class="mid"><span class="p">most likely</span><span class="lv">$150–250K</span><p>Slow fade. $MIHAO holds, nobody big posts $Chinese, October buyers sell near break-even.</p></div>
+        <div class="hi"><span class="p">low–medium</span><span class="lv">$365–395K</span><p>A retest of the high needs one of: a new $MIHAO leg above $25–30M, the real Ansem or pump.fun posting this CA, a fresh viral wave of the meme. Watch for $20K+ of buying an hour and a break of $290K.</p></div>
+        <div class="lo"><span class="p">if it breaks</span><span class="lv">$50–100K</span><p>$MIHAO drops 30–50%, or one of the 3–4% holders sells. The pre-meta base was $40–65K.</p></div>
+      </div>
+      <ul>
+        <li>Levels: support $190K, resistance $290K, high $365K (closes) / $395K (single trade).</li>
+        <li>Exit signs: $MIHAO −30% in a day, cap under $180K, a top-5 holder selling, volume rising while net flow is negative, or growth on “Nx profit” bots alone.</li>
+        <li>Dates around the theme, none tied to this coin: a reported Jensen Huang briefing on Nov 18 (I didn’t open the source), Chinese New Year on Feb 6, 2027.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="qa">
+    <h2><small>Not proven</small>What I couldn’t check</h2>
+    <div class="ans">
+      <ul>
+        <li>Whether the look-alike @ansem and the ANSEMx wallet are the same person.</li>
+        <li>Who runs @chinesetimeinmy, and why CoinGecko lists another site (chinese-time.xyz).</li>
+        <li>Where 2cEH2PFw got the tokens it sold today.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <p>By <a href="https://x.com/iwant1millionn" target="_blank" rel="noopener">@iwant1millionn</a> · updates in <a href="https://t.me/BelowtheChart" target="_blank" rel="noopener">t.me/BelowtheChart</a> · <a href="../">all deep dives</a></p>
+    <p>Sources: GMGN, GeckoTerminal, DexScreener, Helius, Axiom, X, Telegram, Know Your Meme. Times in UTC. Data as of Nov 12, 2026, 07:07 UTC. I hold no position. Not financial advice.</p>
+  </footer>
+</main>
+
+<script>
+(() => {
+  // [unix UTC, close, high, low, volume USD] by hour for each coin (GeckoTerminal); indexed to Nov 10, 16:00 UTC
+  const C = [[1794139200,66227,66227,65036,92],[1794146400,63888,66227,63888,172],[1794157200,64394,64394,63888,2],[1794160800,62330,64394,61037,371],[1794168000,59201,62802,59201,402],[1794171600,60317,72508,58498,3190],[1794175200,58685,60317,58685,176],[1794178800,60442,60442,58685,165],[1794182400,63048,65072,60442,825],[1794186000,63065,63065,63048,1],[1794193200,80783,80783,63065,2840],[1794196800,79133,85207,77543,1197],[1794200400,77540,79133,77540,44],[1794204000,83189,84888,76486,1157],[1794207600,78703,83941,76924,1186],[1794211200,79207,81331,78703,333],[1794214800,78159,79207,78159,174],[1794218400,76694,78360,76694,103],[1794222000,77730,78131,76684,16],[1794225600,76754,77730,76754,15],[1794229200,76666,77247,75095,655],[1794232800,75018,76666,75018,209],[1794236400,73299,75308,73299,336],[1794240000,70482,73299,70482,5],[1794247200,63531,70482,63197,857],[1794250800,63085,63531,63085,1],[1794254400,64992,64992,62918,177],[1794258000,66378,66520,63969,286],[1794265200,67323,67323,66290,46],[1794268800,67840,68969,67323,183],[1794276000,67294,68941,67294,268],[1794279600,66170,67294,66170,48],[1794297600,68397,68397,66170,150],[1794304800,65182,68397,65182,156],[1794308400,64756,65182,64185,66],[1794312000,62401,65346,62401,401],[1794315600,60589,62401,60589,165],[1794319200,57591,60589,57591,306],[1794322800,53347,58778,51584,929],[1794326400,55351,55351,53171,381],[1794330000,57722,57722,55040,407],[1794333600,65134,65260,57295,734],[1794337200,63533,65842,63533,204],[1794340800,63093,63533,63093,7],[1794344400,63609,63609,63093,67],[1794348000,65851,65851,62564,229],[1794351600,140731,201352,65851,53098],[1794355200,141190,189320,123995,29065],[1794358800,140854,155546,108052,13341],[1794362400,116959,140854,113690,6580],[1794366000,134509,180698,108361,34668],[1794369600,121544,137368,114758,6787],[1794373200,122407,134674,113033,3777],[1794376800,127949,130652,118831,2366],[1794380400,124191,133496,121275,2750],[1794384000,128698,138608,122566,1676],[1794387600,124821,130460,124821,444],[1794391200,122389,127593,120538,784],[1794394800,133606,133606,120915,1354],[1794398400,193884,251102,132727,17329],[1794402000,234020,298988,176648,36707],[1794405600,235788,277940,179160,42968],[1794409200,282181,380700,192829,76996],[1794412800,213917,329667,196747,58809],[1794416400,257396,300913,205500,25929],[1794420000,293263,309041,233060,18620],[1794423600,267282,394369,265566,34200],[1794427200,252374,296229,224894,14866],[1794430800,204781,252497,190328,16045],[1794434400,192931,210642,189546,7438],[1794438000,213003,233125,184247,5293],[1794441600,212408,224533,202742,3767],[1794445200,185645,212408,174267,6574],[1794448800,213033,217063,181605,6528],[1794452400,216739,260700,186889,13614],[1794456000,230092,252805,194356,7994],[1794459600,222946,256847,217631,5823],[1794463200,222708,238891,219775,1776],[1794466800,222573,222708,221241,295]], M = [[1794139200,555301,634722,539320,4692],[1794142800,518957,561422,518957,4013],[1794146400,538542,548779,499771,7188],[1794150000,580074,687108,535514,15996],[1794153600,606349,624441,570666,6093],[1794157200,596362,623782,506681,20262],[1794160800,582078,623650,566920,9954],[1794164400,548561,583047,516317,7794],[1794168000,547262,610973,541179,13005],[1794171600,516042,558650,511948,4600],[1794175200,427677,524431,381556,40371],[1794178800,414518,483948,407642,12048],[1794182400,433250,472818,389117,8209],[1794186000,397074,463208,379890,17072],[1794189600,401273,414174,380016,9402],[1794193200,407772,450769,381633,8848],[1794196800,454112,467261,403700,6615],[1794200400,482091,506338,422931,10363],[1794204000,522073,522815,466244,6054],[1794207600,460740,524880,451476,5950],[1794211200,489823,524641,460740,6434],[1794214800,457565,489823,444250,3912],[1794218400,467203,478525,444741,2829],[1794222000,503471,545031,466792,9442],[1794225600,515593,523298,500569,1184],[1794229200,490661,516163,478652,1904],[1794232800,570408,574963,486687,8281],[1794236400,560689,588552,543585,4869],[1794240000,516841,560813,497137,4520],[1794243600,520325,529881,503018,1619],[1794247200,519573,623331,511021,14607],[1794250800,461577,526802,368876,26317],[1794254400,495456,505408,452770,12223],[1794258000,491398,507747,469292,5603],[1794261600,467622,493197,464209,1995],[1794265200,469450,488479,454997,2354],[1794268800,512808,523274,467412,3700],[1794272400,521295,529782,499228,3605],[1794276000,507955,540017,502624,2320],[1794279600,600084,625377,497047,9879],[1794283200,585497,607451,576925,3151],[1794286800,656275,679930,540093,15626],[1794290400,690880,801054,643301,25982],[1794294000,712582,721395,642197,8923],[1794297600,658144,723181,647696,5715],[1794301200,643741,668934,620098,4103],[1794304800,645918,665627,620711,5079],[1794308400,663017,666368,583916,5885],[1794312000,594635,690089,577263,8804],[1794315600,695230,725993,556733,19248],[1794319200,651442,749019,625517,16223],[1794322800,783269,915315,650222,56632],[1794326400,792577,886764,701242,38650],[1794330000,1164808,1513817,778410,321184],[1794333600,1364113,1495938,1155921,117708],[1794337200,1393964,1726096,1263651,112601],[1794340800,1184406,1396965,1140395,61095],[1794344400,1359933,1502337,1147750,44794],[1794348000,3104811,3519546,1285754,978251],[1794351600,13315941,14305233,2583376,11204698],[1794355200,11329724,13844007,9128338,4503619],[1794358800,14310490,16319780,10437916,2535736],[1794362400,14365147,18651244,13346808,3095012],[1794366000,13425338,14840352,12440805,930346],[1794369600,12305473,13851297,11703385,658952],[1794373200,16755050,18947077,12148429,1302714],[1794376800,14013127,16852913,11445380,878686],[1794380400,15554168,16451462,13920312,425317],[1794384000,13782072,16543431,12754578,451309],[1794387600,14072569,14275292,12379574,334239],[1794391200,14541947,14889441,13361929,277084],[1794394800,12159299,14690621,11763358,355502],[1794398400,20905508,22200335,11310775,2250593],[1794402000,23064885,23871137,17907703,1728204],[1794405600,21791707,25980612,20095879,1539552],[1794409200,21050129,25456340,20349121,1393390],[1794412800,20609366,23309990,19277875,960246],[1794416400,22268382,24253763,19889021,775845],[1794420000,21470044,25065087,19244905,1127622],[1794423600,20730481,23783078,20365947,3027636],[1794427200,19937530,21458342,17910154,1118319],[1794430800,18317272,20916397,14853723,2698914],[1794434400,17972293,18631541,15912696,977643],[1794438000,16707919,19570951,16231824,591577],[1794441600,15516534,17451119,14973826,472818],[1794445200,17148390,18112157,15245006,463967],[1794448800,18866733,19922986,17081288,512598],[1794452400,19954827,21200908,17474121,1585251],[1794456000,18805835,22988569,17581226,907880],[1794459600,17497465,18874347,15703038,420010],[1794463200,17235671,18474752,16398634,490846],[1794466800,16869986,17282888,16827170,22745]];
+  const BASE = Date.UTC(2026, 10, 10, 16) / 1000;
+  const cb = C.find(d => d[0] === BASE)[1], mb = M.find(d => d[0] === BASE)[1];
+  const T0 = Date.UTC(2026, 10, 9, 12) / 1000, T1 = C[C.length - 1][0] + 3600;
+  const c = C.filter(d => d[0] >= T0), m = M.filter(d => d[0] >= T0);
+  const narrow = document.getElementById("chartbox").clientWidth < 600;
+  const W = narrow ? 470 : 860, H = narrow ? 470 : 430, L = 40, R = 8, Tp = 54, PB = narrow ? 330 : 300, VB = narrow ? 440 : 400;
+  const LO = Math.log(0.5), HI = Math.log(40);
+  const x = t => L + (t - T0) / (T1 - T0) * (W - L - R);
+  const y = v => Tp + (1 - (Math.log(Math.max(v, 0.5)) - LO) / (HI - LO)) * (PB - Tp);
+  const vmax = Math.max(...c.map(d => d[4]));
+  const vy = v => VB - v / vmax * (VB - PB - 22);
+  const ns = "http://www.w3.org/2000/svg";
+  const el = (n, a, txt) => { const e = document.createElementNS(ns, n); for (const k in a) e.setAttribute(k, a[k]); if (txt) e.textContent = txt; return e };
+  const css = getComputedStyle(document.documentElement), col = n => css.getPropertyValue(n).trim();
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, "aria-hidden": "true" });
+  for (const [v, lab] of [[0.5, "×0.5"], [1, "×1"], [2, "×2"], [5, "×5"], [10, "×10"], [20, "×20"], [40, "×40"]]) {
+    svg.append(el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: col("--chart-grid"), "stroke-width": v === 1 ? 2 : 1 }));
+    svg.append(el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, lab));
+  }
+  svg.append(el("line", { x1: L, x2: W - R, y1: VB, y2: VB, stroke: col("--chart-grid") }));
+  svg.append(el("text", { x: L - 6, y: PB + 30, "text-anchor": "end" }, "vol"));
+  for (const d of c) svg.append(el("rect", { x: x(d[0]) + 0.5, y: vy(d[4]), width: Math.max(1, x(d[0] + 3600) - x(d[0]) - 1), height: VB - vy(d[4]), fill: col("--line") }));
+  const pk = c.reduce((p, d) => d[4] > p[4] ? d : p);
+  svg.append(el("text", { x: x(pk[0]) + 6, y: vy(pk[4]) + 10 }, "$" + Math.round(pk[4] / 1000) + "K/h"));
+  for (let d = 10; d <= 12; d++) svg.append(el("text", { x: x(Date.UTC(2026, 10, d) / 1000), y: H - 8, "text-anchor": "middle" }, "Nov " + d));
+  const line = (arr, b, color, w) => svg.append(el("polyline", { points: arr.map(d => `${x(d[0] + 3600).toFixed(1)},${y(d[1] / b).toFixed(1)}`).join(" "), fill: "none", stroke: color, "stroke-width": w, "stroke-linejoin": "round" }));
+  line(m, mb, col("--jade"), 2.5);
+  line(c, cb, col("--ice"), 3);
+  const lm = m[m.length - 1], lc = c[c.length - 1];
+  svg.append(el("text", { x: W - R, y: y(lm[1] / mb) - 16, "text-anchor": "end", fill: col("--jade") }, "$MIHAO ×" + (lm[1] / mb).toFixed(0)));
+  svg.append(el("text", { x: W - R, y: y(lc[1] / cb) + 22, "text-anchor": "end", fill: col("--ice") }, "$Chinese ×" + (lc[1] / cb).toFixed(1)));
+  const marks = [Date.UTC(2026, 10, 11, 1, 23), Date.UTC(2026, 10, 11, 12, 20), Date.UTC(2026, 10, 11, 13, 51), Date.UTC(2026, 10, 11, 17, 30), Date.UTC(2026, 10, 11, 19, 30)].map(t => t / 1000);
+  marks.forEach((t, i) => {
+    const cy = 14 + (i % 2) * 22;
+    svg.append(el("line", { x1: x(t), x2: x(t), y1: cy + 9, y2: PB, stroke: col("--ice"), "stroke-width": 1, "stroke-dasharray": "2 4", opacity: .6 }));
+    svg.append(el("circle", { cx: x(t), cy, r: 9, fill: col("--paper"), stroke: col("--ice"), "stroke-width": 1.5 }));
+    svg.append(el("text", { x: x(t), y: cy + 4, "text-anchor": "middle", fill: col("--ice") }, String(i + 1)));
+  });
+  document.getElementById("chartbox").append(svg);
+
+  document.querySelectorAll("button.copy").forEach(b => b.addEventListener("click", () => {
+    const v = b.dataset.copy, old = b.textContent;
+    const done = ok => { b.textContent = ok ? "copied" : "select & copy"; setTimeout(() => b.textContent = old, 1400) };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(() => done(true), () => done(false));
+    else done(false);
+  }));
+})();
+</script>
+
+<script id="holders-data" type="application/json">{"t":1794467370,"mint":"Tm2iqbxYjKpW8xCMe6q1xUraNMNzcG5xMztAir3pump","holders":[{"w":"8BRDx1ky8xuRBYq1kmVJ4TrSNaDybSiLU2mxmLVB4WaW","pct":0.09872352186144019,"usd":21985.956635438688,"pnl":59.601378099145016,"sold":0.0,"pool":true,"name":null,"tw":null,"tags":["top_holder"]},{"w":"96B2nyf8VL1VDycZaaGH3vLa8X8JMvitFed4HtRAkMVv","pct":0.039395098528769754,"usd":8773.379551005119,"pnl":5869.1133466904885,"sold":0.0,"pool":false,"name":null,"tw":null,"tags":["padre","top_holder"]},{"w":"HtqSY3JD3bwyTYDYDcAG2KxaA9xSzdmzEwg1BDkAdgN6","pct":0.03449742853090585,"usd":7682.657115688689,"pnl":5149.2566122646285,"sold":0.3539143376744301,"pool":false,"name":null,"tw":null,"tags":["top_holder"]},{"w":"HKD1j9FEdTDHaQx9PvsQgun5a6pbxdmFwmRozYx4B2ad","pct":0.029732355716683617,"usd":6621.464379825433,"pnl":4592.785583332483,"sold":0.0,"pool":false,"name":null,"tw":null,"tags":["top_holder"]},{"w":"FzwKJTKjAeDqP9NdcMMftKFPTm3aJpKZEZuhjtb7QyGV","pct":0.029436878791328752,"usd":6555.660985202391,"pnl":4038.3864765566714,"sold":0.0,"pool":false,"name":null,"tw":null,"tags":["top_holder"]},{"w":"4iUbw1pdpLMMcphcEjHZwwF12ZyvMDwnqvwNCV3wmv8Y","pct":0.025477378600236855,"usd":5673.871135549962,"pnl":302.5073798560916,"sold":0.7373190775083643,"pool":false,"name":null,"tw":null,"tags":["top_holder"]},{"w":"CuHHgTsb8dx56HRwutyAVtN3EoNbo25rKr3XmXm6uoiK","pct":0.022646653908760608,"usd":5043.462200169681,"pnl":3611.406931859821,"sold":0.0,"pool":false,"name":null,"tw":null,"tags":["top_holder"]},{"w":"93PnncnPdCs6a9kKxUgubk3yXvB2stmpVr8Ykx4vC8PY","pct":0.02175169517399927,"usd":4844.1528201762685,"pnl":4050.8400882651604,"sold":0.03417131328410454,"pool":false,"name":null,"tw":null,"tags":["fomo","top_holder","transfer_in"]},{"w":"Ctq5HW5cySQWr43fwiRGdnPr644CpxcF29VPPeD1byDF","pct":0.020802847770408063,"usd":4632.842309006661,"pnl":4571.448958968715,"sold":0.24960387413623522,"pool":false,"name":null,"tw":null,"tags":["fomo","top_holder","bundler"]},{"w":"CguBnF3RViub8x4QARUhiYdc1dBi8GGCbUshrkdWv3mF","pct":0.0207584045141487,"usd":4622.944693054229,"pnl":3536.200740320409,"sold":0.1704637636806028,"pool":false,"name":null,"tw":null,"tags":["top_holder"]},{"w":"EMp115dQaDGcMnogrB8FnxBc9XF6AZAq4QJ9wFK5utFB","pct":0.020112101330499007,"usd":4479.01147935657,"pnl":832.4939539055401,"sold":0.4656017433092874,"pool":false,"name":null,"tw":null,"tags":["axiom","top_holder"]},{"w":"FfzhVje5AQ6T4MbEym24MuuewzTjjF4b739DRY1TEFrw","pct":0.01938378812955546,"usd":4316.814445143828,"pnl":4040.6947647920383,"sold":0.258237224327444,"pool":false,"name":null,"tw":null,"tags":["fomo"]},{"w":"5ZRbvpPKzaXutLwLZtckThNMPB6ax7WbXrnZqYrtbjRk","pct":0.018553978774848958,"usd":4132.013982758942,"pnl":1331.3835313571417,"sold":0.0,"pool":false,"name":null,"tw":null,"tags":["padre"]},{"w":"3thfxeojFTjgX2vBJ7fEJU7RjcSyVCujmspLkJZchFkj","pct":0.016587020562732573,"usd":3693.967839956152,"pnl":2721.166163074645,"sold":0.0,"pool":false,"name":null,"tw":null,"tags":["transfer_in"]},{"w":"CCEzvbo93rREfwNadPUfQLj9gWGUDdskCqNeNM5njgaf","pct":0.016488348853642906,"usd":3671.9934221448143,"pnl":2168.0214150388906,"sold":0.0,"pool":false,"name":null,"tw":null,"tags":[]},{"w":"DC4hMctYniy4bz1ocMuqvR7RJC8qtfu9ZAHDjxPtMLEo","pct":0.015571029721844019,"usd":3467.704330018473,"pnl":4418.515919649242,"sold":0.42123671183448763,"pool":false,"name":null,"tw":null,"tags":[]},{"w":"CMkjgTB219VNJE7oX3qSfh6dDDu53SsfX5fCPsAML6UP","pct":0.014696140306009537,"usd":3272.864433764182,"pnl":2274.2957053252103,"sold":0.6579667474535416,"pool":false,"name":null,"tw":null,"tags":[]},{"w":"EvZQfTvFSimi6Lynu45xS7cM2zeto7uqCm9QWsTjRXqq","pct":0.013142856988684878,"usd":2926.9446467332773,"pnl":1478.3329577279173,"sold":0.0,"pool":false,"name":null,"tw":null,"tags":["fomo"]},{"w":"5cpJxeAqExmQfRMDtELSi43h8nRZGbMpHzqDmr8DsnQJ","pct":0.012879547841350019,"usd":2868.305090669388,"pnl":708.2908766099081,"sold":0.0,"pool":false,"name":null,"tw":null,"tags":["padre"]},{"w":"9iWJZzTLV3e4wcBMYqoh6TarWjx6eH4WDXbojpsoC4c3","pct":0.012653995466020121,"usd":2818.07405505071,"pnl":1110.6265557011998,"sold":0.366766723585836,"pool":false,"name":null,"tw":null,"tags":["fomo","transfer_in"]}],"stats":{"96B2nyf8VL1VDycZaaGH3vLa8X8JMvitFed4HtRAkMVv":{"1d":{"realized":0.0,"pct":null,"buy":0,"sell":0},"7d":{"realized":0.0,"pct":null,"buy":0,"sell":0},"30d":{"realized":-173.95682402252,"pct":-0.6350063340247024,"buy":9,"sell":4},"all":{"realized":-52811.13547481871,"pct":-0.19373261759409302,"buy":1480,"sell":558},"total_profit":-66818.31795495996,"total_cost":306573.1525933641,"unrealized":-14007.18248014125,"total_pct":-0.21795228117573354,"winrate":0.0,"tokens":9,"hold_s":1690567.25,"buckets":{"< −50 %":3,"−50…0 %":2,"0…2×":4,"2…5×":0,"> 5×":0},"balance":4.651294149,"last_t":1794413324,"created":1782940535,"fund_from":null,"fund_amount":"5","wtags":["arbitrager","padre"],"twitter":null,"followers":0,"created_tokens":0},"HtqSY3JD3bwyTYDYDcAG2KxaA9xSzdmzEwg1BDkAdgN6":{"1d":{"realized":0.0,"pct":null,"buy":0,"sell":0},"7d":{"realized":-22.048752803445883,"pct":-0.11765865547580737,"buy":7,"sell":6},"30d":{"realized":-181.51159874365933,"pct":-0.21366861785700758,"buy":31,"sell":22},"all":{"realized":-911.5871118305197,"pct":-0.18956163778432128,"buy":147,"sell":121},"total_profit":5801.281050213613,"total_cost":7341.059422316092,"unrealized":6712.868162044132,"total_pct":0.7902512044212984,"winrate":0.0,"tokens":2,"hold_s":2043162.5,"buckets":{"< −50 %":0,"−50…0 %":1,"0…2×":1,"2…5×":0,"> 5×":0},"balance":1.695681981,"last_t":1794344954,"created":1788038316,"fund_from":null,"fund_amount":"2.3","wtags":[],"twitter":null,"followers":0,"created_tokens":2},"HKD1j9FEdTDHaQx9PvsQgun5a6pbxdmFwmRozYx4B2ad":{"1d":{"realized":0.0,"pct":null,"buy":8,"sell":0},"7d":{"realized":0.0,"pct":null,"buy":8,"sell":0},"30d":{"realized":-32.61509684978926,"pct":-0.0053355734762175495,"buy":109,"sell":96},"all":{"realized":-462.94912060503924,"pct":-0.04752460743641677,"buy":182,"sell":154},"total_profit":4325.453199010954,"total_cost":12389.689871370423,"unrealized":4788.402319615994,"total_pct":0.3491171485257295,"winrate":0.288135593220339,"tokens":67,"hold_s":184304.24074074073,"buckets":{"< −50 %":7,"−50…0 %":35,"0…2×":25,"2…5×":0,"> 5×":0},"balance":0.338561993,"last_t":1794427144,"created":1791453478,"fund_from":null,"fund_amount":"1","wtags":[],"twitter":null,"followers":0,"created_tokens":22},"FzwKJTKjAeDqP9NdcMMftKFPTm3aJpKZEZuhjtb7QyGV":{"1d":{"realized":0.0,"pct":null,"buy":1,"sell":0},"7d":{"realized":0.0,"pct":null,"buy":3,"sell":0},"30d":{"realized":0.0,"pct":null,"buy":5,"sell":0},"all":{"realized":-62828.15317431848,"pct":-0.10026545845970508,"buy":609,"sell":370},"total_profit":-78331.71358377564,"total_cost":725597.5711723531,"unrealized":-15503.560409457155,"total_pct":-0.1079547626616425,"winrate":0.0,"tokens":4,"hold_s":10945007.0,"buckets":{"< −50 %":0,"−50…0 %":1,"0…2×":3,"2…5×":0,"> 5×":0},"balance":1.803032603,"last_t":1794425409,"created":1740144996,"fund_from":"Coinbase 2","fund_amount":"1.10599346","wtags":["bluechip_owner","arbitrager"],"twitter":null,"followers":0,"created_tokens":0},"4iUbw1pdpLMMcphcEjHZwwF12ZyvMDwnqvwNCV3wmv8Y":{"1d":{"realized":0.0,"pct":null,"buy":0,"sell":0},"7d":{"realized":0.0,"pct":null,"buy":0,"sell":0},"30d":{"realized":-2022.52655096362,"pct":-0.626168716204451,"buy":3,"sell":1},"all":{"realized":-6298.066126721445,"pct":-0.034104483855553445,"buy":327,"sell":307},"total_profit":-2040.8634912626944,"total_cost":231976.17578185062,"unrealized":4257.202635458751,"total_pct":-0.008797728837386791,"winrate":0.0,"tokens":5,"hold_s":6243745.5,"buckets":{"< −50 %":0,"−50…0 %":1,"0…2×":4,"2…5×":0,"> 5×":0},"balance":1.903792729,"last_t":1794417858,"created":1732225406,"fund_from":"Crypto.com","fund_amount":"4.088","wtags":["arbitrager"],"twitter":null,"followers":0,"created_tokens":0},"CuHHgTsb8dx56HRwutyAVtN3EoNbo25rKr3XmXm6uoiK":{"1d":{"realized":0.0,"pct":null,"buy":1,"sell":0},"7d":{"realized":0.0,"pct":null,"buy":1,"sell":0},"30d":{"realized":0.0,"pct":null,"buy":12,"sell":0},"all":{"realized":0.0,"pct":null,"buy":12,"sell":0},"total_profit":4616.62214643018,"total_cost":1481.4355668209,"unrealized":4616.62214643018,"total_pct":3.1163165309560252,"winrate":0.0,"tokens":3,"hold_s":1795463.5,"buckets":{"< −50 %":0,"−50…0 %":0,"0…2×":3,"2…5×":0,"> 5×":0},"balance":1.546982239,"last_t":1794435991,"created":1792609401,"fund_from":null,"fund_amount":"4.539713301","wtags":[],"twitter":null,"followers":0,"created_tokens":0},"93PnncnPdCs6a9kKxUgubk3yXvB2stmpVr8Ykx4vC8PY":{"1d":{"realized":660.5579544667902,"pct":1.904414769765259,"buy":0,"sell":0},"7d":{"realized":1634.500885453023,"pct":0.986220559240853,"buy":0,"sell":0},"30d":{"realized":1477.292970227553,"pct":0.5410600066994398,"buy":13,"sell":13},"all":{"realized":26031.907728435595,"pct":0.20724802582809368,"buy":589,"sell":775},"total_profit":25745.044104951787,"total_cost":129078.39111348208,"unrealized":-286.86362348380845,"total_pct":0.19945278123522217,"winrate":0.18181818181818182,"tokens":14,"hold_s":1121744.2307692308,"buckets":{"< −50 %":2,"−50…0 %":7,"0…2×":5,"2…5×":0,"> 5×":0},"balance":3.127257973,"last_t":1794425012,"created":1777497963,"fund_from":null,"fund_amount":"2","wtags":["arbitrager","fomo"],"twitter":null,"followers":0,"created_tokens":0},"Ctq5HW5cySQWr43fwiRGdnPr644CpxcF29VPPeD1byDF":{"1d":{"realized":-43.84527088849999,"pct":-0.924964261964718,"buy":0,"sell":1},"7d":{"realized":-43.84527088849999,"pct":-0.924964261964718,"buy":2,"sell":1},"30d":{"realized":-44.11548922413999,"pct":-0.45198827558174426,"buy":11,"sell":2},"all":{"realized":208.61057828780562,"pct":0.07783515767245115,"buy":72,"sell":57},"total_profit":5507.728138219539,"total_cost":3407.811049975955,"unrealized":5299.117559931733,"total_pct":1.616207018947955,"winrate":0.5,"tokens":5,"hold_s":1696345.0,"buckets":{"< −50 %":0,"−50…0 %":1,"0…2×":3,"2…5×":1,"> 5×":0},"balance":2.140139724,"last_t":1794448108,"created":1790563956,"fund_from":null,"fund_amount":"0.017821317","wtags":["arbitrager","fomo"],"twitter":null,"followers":0,"created_tokens":0},"CguBnF3RViub8x4QARUhiYdc1dBi8GGCbUshrkdWv3mF":{"1d":{"realized":16098.511950507549,"pct":20.336294413753485,"buy":36,"sell":35},"7d":{"realized":92240.54935950029,"pct":17.58512222454445,"buy":159,"sell":188},"30d":{"realized":94422.04367205243,"pct":8.97985648269603,"buy":383,"sell":339},"all":{"realized":94422.04367205243,"pct":8.97985648269603,"buy":383,"sell":339},"total_profit":121292.99332730896,"total_cost":39160.90193117855,"unrealized":26870.94965525653,"total_pct":3.0972982578508916,"winrate":0.5319148936170213,"tokens":79,"hold_s":245239.67741935485,"buckets":{"< −50 %":4,"−50…0 %":17,"0…2×":49,"2…5×":2,"> 5×":7},"balance":72.01711176,"last_t":1794467125,"created":1793555888,"fund_from":null,"fund_amount":"0.021703679","wtags":[],"twitter":null,"followers":0,"created_tokens":1},"EMp115dQaDGcMnogrB8FnxBc9XF6AZAq4QJ9wFK5utFB":{"1d":{"realized":19970.21147989063,"pct":0.4369063602154644,"buy":77,"sell":130},"7d":{"realized":26293.515598424918,"pct":0.1873111208094078,"buy":137,"sell":221},"30d":{"realized":37426.75746003636,"pct":0.22067052759092268,"buy":928,"sell":562},"all":{"realized":1143018.5050992998,"pct":0.20640558539493312,"buy":2806,"sell":1906},"total_profit":1135581.943794748,"total_cost":4677811.350763313,"unrealized":-7436.561304551828,"total_pct":0.24275924329642898,"winrate":0.4095238095238095,"tokens":960,"hold_s":1779084.2456331877,"buckets":{"< −50 %":15,"−50…0 %":44,"0…2×":898,"2…5×":0,"> 5×":3},"balance":446.447148526,"last_t":1794451243,"created":1740987791,"fund_from":null,"fund_amount":"349.9","wtags":["arbitrager","axiom"],"twitter":null,"followers":0,"created_tokens":60},"FfzhVje5AQ6T4MbEym24MuuewzTjjF4b739DRY1TEFrw":{"1d":{"realized":-1.20208480593,"pct":-0.017040113772266885,"buy":2,"sell":1},"7d":{"realized":-1.20208480593,"pct":-0.017040113772266885,"buy":3,"sell":1},"30d":{"realized":-357.6794996504017,"pct":-0.23329080584790837,"buy":36,"sell":30},"all":{"realized":-9200.034351780532,"pct":-0.3066439314057368,"buy":281,"sell":241},"total_profit":-5191.406356434841,"total_cost":32116.001996314324,"unrealized":4008.627995345691,"total_pct":-0.16164547371215798,"winrate":0.08333333333333333,"tokens":34,"hold_s":709866.9285714285,"buckets":{"< −50 %":10,"−50…0 %":12,"0…2×":12,"2…5×":0,"> 5×":0},"balance":0.158649514,"last_t":1794443319,"created":1789579048,"fund_from":null,"fund_amount":"0.016979187","wtags":["arbitrager","fomo"],"twitter":null,"followers":0,"created_tokens":0},"5ZRbvpPKzaXutLwLZtckThNMPB6ax7WbXrnZqYrtbjRk":{"1d":{"realized":0.0,"pct":null,"buy":0,"sell":0},"7d":{"realized":0.0,"pct":null,"buy":0,"sell":0},"30d":{"realized":0.0,"pct":null,"buy":12,"sell":0},"all":{"realized":0.0,"pct":null,"buy":12,"sell":0},"total_profit":2141.3992972476753,"total_cost":2800.6304514018,"unrealized":2141.3992972476753,"total_pct":0.7646133020427026,"winrate":0.0,"tokens":1,"hold_s":2408412.0,"buckets":{"< −50 %":0,"−50…0 %":0,"0…2×":1,"2…5×":0,"> 5×":0},"balance":8.210799524,"last_t":1792035570,"created":1788647593,"fund_from":null,"fund_amount":"4.988858718","wtags":["padre"],"twitter":null,"followers":0,"created_tokens":0},"3thfxeojFTjgX2vBJ7fEJU7RjcSyVCujmspLkJZchFkj":{"1d":{"realized":0.0,"pct":null,"buy":0,"sell":0},"7d":{"realized":0.0,"pct":null,"buy":0,"sell":0},"30d":{"realized":0.0,"pct":null,"buy":0,"sell":0},"all":{"realized":-88.25727470392448,"pct":-0.6263333122588888,"buy":0,"sell":2},"total_profit":-88.25727470392448,"total_cost":1113.7816037476996,"unrealized":0.0,"total_pct":-0.079241095747095,"winrate":0.0,"tokens":1,"hold_s":4950282.0,"buckets":{"< −50 %":0,"−50…0 %":0,"0…2×":1,"2…5×":0,"> 5×":0},"balance":3.239078439,"last_t":1792376068,"created":1790953375,"fund_from":null,"fund_amount":"0.01926858","wtags":[],"twitter":null,"followers":0,"created_tokens":0},"CCEzvbo93rREfwNadPUfQLj9gWGUDdskCqNeNM5njgaf":{"1d":{"realized":-182.29521298213314,"pct":-0.31563123897688494,"buy":6,"sell":4},"7d":{"realized":1698.6216666453513,"pct":0.6778724778081258,"buy":34,"sell":28},"30d":{"realized":1723.0315007765073,"pct":0.29459855040972355,"buy":81,"sell":83},"all":{"realized":2346.9634267012616,"pct":0.2941664963247604,"buy":145,"sell":119},"total_profit":6066.968454759743,"total_cost":18411.399436211203,"unrealized":3720.005028058481,"total_pct":0.3295223959362557,"winrate":0.5714285714285714,"tokens":36,"hold_s":859117.1904761905,"buckets":{"< −50 %":2,"−50…0 %":7,"0…2×":20,"2…5×":5,"> 5×":2},"balance":12.864868659,"last_t":1794457363,"created":1788537990,"fund_from":null,"fund_amount":"0.05","wtags":["arbitrager"],"twitter":null,"followers":0,"created_tokens":0},"DC4hMctYniy4bz1ocMuqvR7RJC8qtfu9ZAHDjxPtMLEo":{"1d":{"realized":3734.4674972688244,"pct":0.9963438616075712,"buy":56,"sell":20},"7d":{"realized":136727.597125735,"pct":9.407396553282988,"buy":499,"sell":166},"30d":{"realized":143223.82693922575,"pct":1.900937273217405,"buy":1282,"sell":621},"all":{"realized":143544.92091728325,"pct":1.2953958967031678,"buy":2113,"sell":805},"total_profit":166042.18298150302,"total_cost":250672.4921049646,"unrealized":22497.26206421978,"total_pct":0.6623869319972127,"winrate":0.28846153846153844,"tokens":133,"hold_s":762668.5531914893,"buckets":{"< −50 %":4,"−50…0 %":67,"0…2×":58,"2…5×":3,"> 5×":1},"balance":1167.582539875,"last_t":1794466608,"created":1788014461,"fund_from":null,"fund_amount":"0.045","wtags":["arbitrager"],"twitter":null,"followers":0,"created_tokens":3},"CMkjgTB219VNJE7oX3qSfh6dDDu53SsfX5fCPsAML6UP":{"1d":{"realized":48.06453995257454,"pct":0.8576943218422163,"buy":9,"sell":3},"7d":{"realized":-13.520273676210703,"pct":-0.04594790162577667,"buy":62,"sell":12},"30d":{"realized":-515.4513257705353,"pct":-0.19992160250555893,"buy":108,"sell":36},"all":{"realized":-1083.5147043878776,"pct":-0.2325285464144629,"buy":219,"sell":70},"total_profit":1869.6358809437922,"total_cost":5898.8214585362275,"unrealized":2953.15058533167,"total_pct":0.31695074924470357,"winrate":0.14285714285714285,"tokens":16,"hold_s":151644.41666666666,"buckets":{"< −50 %":5,"−50…0 %":7,"0…2×":4,"2…5×":0,"> 5×":0},"balance":0.673322205,"last_t":1794439349,"created":1789138725,"fund_from":"Crypto.com","fund_amount":"0.99","wtags":[],"twitter":null,"followers":0,"created_tokens":1},"EvZQfTvFSimi6Lynu45xS7cM2zeto7uqCm9QWsTjRXqq":{"1d":{"realized":0.0,"pct":null,"buy":0,"sell":0},"7d":{"realized":0.0,"pct":null,"buy":11,"sell":0},"30d":{"realized":-3004.1309436182573,"pct":-0.40356782401763525,"buy":105,"sell":37},"all":{"realized":1896.6675388700503,"pct":0.015386675924881578,"buy":1412,"sell":697},"total_profit":3774.8928425963595,"total_cost":126564.11888681447,"unrealized":1878.2253037263094,"total_pct":0.02982593230844694,"winrate":0.2647058823529412,"tokens":42,"hold_s":1525428.064516129,"buckets":{"< −50 %":10,"−50…0 %":14,"0…2×":18,"2…5×":0,"> 5×":0},"balance":1.144482296,"last_t":1794466877,"created":1783145174,"fund_from":null,"fund_amount":"0.02","wtags":["fomo"],"twitter":null,"followers":0,"created_tokens":0},"5cpJxeAqExmQfRMDtELSi43h8nRZGbMpHzqDmr8DsnQJ":{"1d":{"realized":0.0,"pct":null,"buy":0,"sell":0},"7d":{"realized":0.0,"pct":null,"buy":0,"sell":0},"30d":{"realized":0.0,"pct":null,"buy":8,"sell":0},"all":{"realized":0.0,"pct":null,"buy":8,"sell":0},"total_profit":1270.5765693787798,"total_cost":2160.01421405948,"unrealized":1270.5765693787798,"total_pct":0.5882260223606992,"winrate":0.0,"tokens":1,"hold_s":2393060.0,"buckets":{"< −50 %":0,"−50…0 %":0,"0…2×":1,"2…5×":0,"> 5×":0},"balance":1.663063574,"last_t":1792036859,"created":1792035435,"fund_from":null,"fund_amount":"20.97378676","wtags":["padre"],"twitter":null,"followers":0,"created_tokens":0},"9iWJZzTLV3e4wcBMYqoh6TarWjx6eH4WDXbojpsoC4c3":{"1d":{"realized":683.3054766955188,"pct":0.4636270616583395,"buy":8,"sell":7},"7d":{"realized":296.5123899666995,"pct":0.08482237582411657,"buy":34,"sell":18},"30d":{"realized":-20731.738524192413,"pct":-0.40255717659948803,"buy":130,"sell":175},"all":{"realized":-20565.993768233395,"pct":-0.14461918753439315,"buy":820,"sell":676},"total_profit":-19838.089821452537,"total_cost":151575.19728383058,"unrealized":727.9039467808591,"total_pct":-0.1308795249944813,"winrate":0.19230769230769232,"tokens":67,"hold_s":611593.0731707317,"buckets":{"< −50 %":8,"−50…0 %":27,"0…2×":32,"2…5×":0,"> 5×":0},"balance":0.137771734,"last_t":1794443877,"created":1789830124,"fund_from":null,"fund_amount":"0.097720466","wtags":["fomo"],"twitter":null,"followers":0,"created_tokens":0}}}</script>
+<script id="holders-notes" type="application/json">{"8BRDx1ky8xuRBYq1kmVJ4TrSNaDybSiLU2mxmLVB4WaW": "PumpSwap pool", "96B2nyf8VL1VDycZaaGH3vLa8X8JMvitFed4HtRAkMVv": "since Oct 1, not moving", "HtqSY3JD3bwyTYDYDcAG2KxaA9xSzdmzEwg1BDkAdgN6": "since Sep 25", "FzwKJTKjAeDqP9NdcMMftKFPTm3aJpKZEZuhjtb7QyGV": "bought the Nov 6 base", "4iUbw1pdpLMMcphcEjHZwwF12ZyvMDwnqvwNCV3wmv8Y": "selling, $5.1K out", "93PnncnPdCs6a9kKxUgubk3yXvB2stmpVr8Ykx4vC8PY": "pair with 4dBQMwrL", "3thfxeojFTjgX2vBJ7fEJU7RjcSyVCujmspLkJZchFkj": "bought via fomo", "EMp115dQaDGcMnogrB8FnxBc9XF6AZAq4QJ9wFK5utFB": "in at the meta start"}</script>
+
+<script>
+(() => {
+  // Топ держателей: таблица + карточка кошелька (как окно GMGN). Данные вшиты сборкой media/reports/build.py из holders.json.
+  const D = JSON.parse(document.getElementById("holders-data").textContent || "null");
+  const NOTES = JSON.parse(document.getElementById("holders-notes").textContent || "{}");
+  const body = document.getElementById("hbody");
+  if (!D || !body) { document.getElementById("holders").hidden = true; return; }
+  const S = D.stats || {};
+  const short = a => a.slice(0, 5) + "…" + a.slice(-4);
+  const money = v => { const a = Math.abs(v); return "$" + (a >= 1e6 ? (a / 1e6).toFixed(2) + "M" : a >= 1e3 ? (a / 1e3).toFixed(1) + "K" : a.toFixed(0)) };
+  const usd = v => v == null ? "—" : (v >= 0 ? "+" : "−") + money(v);
+  const pct = v => v == null ? "" : (v >= 0 ? "+" : "−") + Math.abs(v * 100).toFixed(0) + "%";
+  const cls = v => v == null ? "muted" : v > 0 ? "pos" : v < 0 ? "neg" : "muted";
+  const esc = x => String(x).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]);
+  body.innerHTML = D.holders.map(h => {
+    const s = S[h.w] || {}, m30 = s["30d"] || {}, all = s.all || {};
+    const note = NOTES[h.w] || (h.pool ? "liquidity pool" : "");
+    const sub = (v, p) => v == null ? "—" : usd(v) + `<small>${pct(p)}</small>`;
+    return `<tr><td data-l="Wallet"><a class="wl" data-w="${h.w}" href="https://gmgn.ai/sol/address/${h.w}" target="_blank" rel="noopener">${short(h.w)}</a>${note ? `<span class="note">${esc(note)}</span>` : ""}</td>
+      <td data-l="Share">${(h.pct * 100).toFixed(1)}%</td><td data-l="Value">${money(h.usd)}</td><td data-l="On this coin" class="${cls(h.pnl)}">${h.pool ? "—" : usd(h.pnl)}</td>
+      <td data-l="30 days" class="${cls(m30.realized)}">${sub(m30.realized, m30.pct)}</td>
+      <td data-l="All time" class="${cls(s.total_profit)}">${sub(s.total_profit, s.total_pct)}</td>
+      <td data-l="Win rate" class="${s.winrate >= .5 ? "pos" : s.winrate == null ? "muted" : ""}">${s.winrate == null ? "—" : (s.winrate * 100).toFixed(0) + "%"}</td>
+      <td class="tags">${(h.tags || []).map(t => `<span class="tg">${esc(t)}</span>`).join("")}</td></tr>`;
+  }).join("");
+  const when = new Date(D.t * 1000).toISOString().slice(0, 16).replace("T", " ");
+  document.getElementById("hnote").textContent = `GMGN top holders and wallet stats, ${when} UTC. Win rate and outcomes cover the wallet’s last 30 days on all coins.`;
+
+  const pop = document.createElement("div"); pop.id = "wpop"; document.body.appendChild(pop);
+  const ago = t => { const h = (Date.now() / 1000 - t) / 3600; return h < 1 ? Math.round(h * 60) + " min" : h < 48 ? h.toFixed(1) + " h" : (h / 24).toFixed(0) + " days" };
+  function card(a) {
+    const w = S[a];
+    if (!w || !Object.keys(w).length) return `<b class="mono">${short(a)}</b><div class="muted">${NOTES[a] || "No wallet stats: a pool or program account."}</div>`;
+    const m30 = w["30d"] || {}, b = w.buckets || {}, tot = Object.values(b).reduce((x, y) => x + (y || 0), 0);
+    const cols = {"< −50 %": "var(--down)", "−50…0 %": "var(--warn)", "0…2×": "var(--soft)", "2…5×": "var(--up)", "> 5×": "var(--ice)"};
+    const lab = {"< −50 %": "< −50%", "−50…0 %": "−50…0%", "0…2×": "0…2x", "2…5×": "2…5x", "> 5×": "> 5x"};
+    const bg = v => v == null ? "var(--bg)" : v >= 0 ? "var(--up-bg)" : "var(--down-bg)";
+    const age = w.created ? Math.round((Date.now() / 1000 - w.created) / 86400) : null;
+    return `<button class="x" type="button" aria-label="Close">×</button>
+      <div class="hd"><b class="mono">${w.twitter ? `<a href="https://x.com/${esc(w.twitter)}" target="_blank" rel="noopener">@${esc(w.twitter)}</a>` : short(a)}</b><span class="muted" style="font-size:.78rem">${(w.wtags || []).slice(0, 3).map(esc).join(" · ")}</span></div>
+      <div class="hd"><div><div class="muted" style="font-size:.75rem">Profit, 30 days</div><div class="big ${cls(m30.pct)}">${m30.pct == null ? "—" : pct(m30.pct)}</div><div class="${cls(m30.realized)}">${usd(m30.realized)}</div></div>
+        <div style="text-align:right"><div class="muted" style="font-size:.75rem">Win rate</div><div class="big">${w.winrate == null ? "—" : (w.winrate * 100).toFixed(1) + "%"}</div><div class="muted" style="font-size:.75rem">${w.tokens != null ? w.tokens + " coins" : ""}</div></div></div>
+      <div class="row"><span class="muted">Total profit</span><span class="${cls(w.total_profit)}">${usd(w.total_profit)} ${w.total_pct == null ? "" : "(" + pct(w.total_pct) + ")"}</span></div>
+      <div class="row"><span class="muted">Unrealized</span><span class="${cls(w.unrealized)}">${usd(w.unrealized)}</span></div>
+      <div class="row"><span class="muted">Trades, 30 days</span><span>${m30.buy ?? "—"} buys / ${m30.sell ?? "—"} sells</span></div>
+      <div class="per">${["1d", "7d", "30d", "all"].map(k => { const r = w[k] || {}; return `<div style="background:${bg(r.realized)}" class="${cls(r.realized)}"><div class="muted" style="font-size:.66rem">${({"1d": "1 day", "7d": "7 days", "30d": "30 days", all: "all time"})[k]}</div>${usd(r.realized)}</div>` }).join("")}</div>
+      ${tot ? `<div class="muted" style="font-size:.75rem">How its coins ended, 30 days</div><div class="bk">${Object.entries(b).map(([k, x]) => x ? `<span style="width:${x / tot * 100}%;background:${cols[k]}"></span>` : "").join("")}</div>
+        <div class="muted" style="font-size:.72rem">${Object.entries(b).filter(([, x]) => x).map(([k, x]) => `${lab[k]}: ${x}`).join(" · ")}</div>` : ""}
+      <div class="row"><span class="muted">Wallet age</span><span>${age != null ? age + " days" : "—"}${w.fund_from ? " · funded from " + esc(w.fund_from) : ""}</span></div>
+      ${w.hold_s ? `<div class="row"><span class="muted">Average hold</span><span>${w.hold_s > 86400 ? (w.hold_s / 86400).toFixed(1) + " days" : w.hold_s > 3600 ? (w.hold_s / 3600).toFixed(1) + " h" : Math.round(w.hold_s / 60) + " min"}</span></div>` : ""}
+      ${w.last_t ? `<div class="row"><span class="muted">Last trade</span><span>${ago(w.last_t)} ago</span></div>` : ""}
+      <a href="https://gmgn.ai/sol/address/${a}" target="_blank" rel="noopener" style="font-size:.8rem">open on GMGN →</a>`;
+  }
+  function show(a, el) {
+    pop.innerHTML = card(a); pop.style.display = "flex";
+    const r = el.getBoundingClientRect(), H = pop.offsetHeight, W = pop.offsetWidth;
+    pop.style.left = Math.max(16, Math.min(innerWidth - W - 16, r.right + 12)) + "px";
+    pop.style.top = Math.max(16, Math.min(innerHeight - H - 16, r.top - 40)) + "px";
+    const x = pop.querySelector(".x"); if (x) x.onclick = () => pop.style.display = "none";
+  }
+  const touch = matchMedia("(hover: none)").matches;
+  body.addEventListener("mouseover", e => { const a = e.target.closest("a.wl"); if (a && !touch) show(a.dataset.w, a) });
+  body.addEventListener("mouseout", e => { if (!touch && e.target.closest("a.wl") && !pop.contains(e.relatedTarget)) pop.style.display = "none" });
+  pop.addEventListener("mouseleave", () => { if (!touch) pop.style.display = "none" });
+  body.addEventListener("click", e => { const a = e.target.closest("a.wl"); if (a && touch) { e.preventDefault(); show(a.dataset.w, a) } });
+  document.addEventListener("click", e => { if (touch && pop.style.display === "flex" && !pop.contains(e.target) && !e.target.closest("a.wl")) pop.style.display = "none" });
+})();
+</script>
+
+</body>
+</html>
